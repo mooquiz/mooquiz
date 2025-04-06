@@ -19,3 +19,4 @@ lustre = ">= 4.6.4 and < 5.0.0"
 
 [dev-dependencies]
 gleeunit = ">= 1.0.0 and < 2.0.0"
+lustre_dev_tools = ">= 1.7.0 and < 2.0.0"
