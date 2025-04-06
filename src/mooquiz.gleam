@@ -1,5 +1,9 @@
-import gleam/io
+import lustre
+import lustre/element
 
 pub fn main() {
-  io.println("Hello from mooquiz!")
+  let app = lustre.element(element.text("Hello, world!"))
+  let assert Ok(_) = lustre.start(app, "#app", Nil)
+
+  Nil
 }
