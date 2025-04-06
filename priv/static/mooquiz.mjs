@@ -368,6 +368,27 @@ function makeError(variant, module, line, fn, message, extra) {
 var None = class extends CustomType {
 };
 
+// build/dev/javascript/gleam_stdlib/gleam/string.mjs
+function drop_start(loop$string, loop$num_graphemes) {
+  while (true) {
+    let string3 = loop$string;
+    let num_graphemes = loop$num_graphemes;
+    let $ = num_graphemes > 0;
+    if (!$) {
+      return string3;
+    } else {
+      let $1 = pop_grapheme(string3);
+      if ($1.isOk()) {
+        let string$1 = $1[0][1];
+        loop$string = string$1;
+        loop$num_graphemes = num_graphemes - 1;
+      } else {
+        return string3;
+      }
+    }
+  }
+}
+
 // build/dev/javascript/gleam_stdlib/dict.mjs
 var referenceMap = /* @__PURE__ */ new WeakMap();
 var tempDataView = /* @__PURE__ */ new DataView(
@@ -1169,6 +1190,42 @@ function keys(dict2) {
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/list.mjs
+function reverse_and_prepend(loop$prefix, loop$suffix) {
+  while (true) {
+    let prefix = loop$prefix;
+    let suffix = loop$suffix;
+    if (prefix.hasLength(0)) {
+      return suffix;
+    } else {
+      let first$1 = prefix.head;
+      let rest$1 = prefix.tail;
+      loop$prefix = rest$1;
+      loop$suffix = prepend(first$1, suffix);
+    }
+  }
+}
+function reverse(list2) {
+  return reverse_and_prepend(list2, toList([]));
+}
+function map_loop(loop$list, loop$fun, loop$acc) {
+  while (true) {
+    let list2 = loop$list;
+    let fun = loop$fun;
+    let acc = loop$acc;
+    if (list2.hasLength(0)) {
+      return reverse(acc);
+    } else {
+      let first$1 = list2.head;
+      let rest$1 = list2.tail;
+      loop$list = rest$1;
+      loop$fun = fun;
+      loop$acc = prepend(fun(first$1), acc);
+    }
+  }
+}
+function map(list2, fun) {
+  return map_loop(list2, fun, toList([]));
+}
 function fold(loop$list, loop$initial, loop$fun) {
   while (true) {
     let list2 = loop$list;
@@ -1207,27 +1264,6 @@ function index_fold(list2, initial, fun) {
   return index_fold_loop(list2, initial, fun, 0);
 }
 
-// build/dev/javascript/gleam_stdlib/gleam/string.mjs
-function drop_start(loop$string, loop$num_graphemes) {
-  while (true) {
-    let string3 = loop$string;
-    let num_graphemes = loop$num_graphemes;
-    let $ = num_graphemes > 0;
-    if (!$) {
-      return string3;
-    } else {
-      let $1 = pop_grapheme(string3);
-      if ($1.isOk()) {
-        let string$1 = $1[0][1];
-        loop$string = string$1;
-        loop$num_graphemes = num_graphemes - 1;
-      } else {
-        return string3;
-      }
-    }
-  }
-}
-
 // build/dev/javascript/gleam_stdlib/gleam/bool.mjs
 function guard(requirement, consequence, alternative) {
   if (requirement) {
@@ -1253,6 +1289,18 @@ var Text = class extends CustomType {
   constructor(content) {
     super();
     this.content = content;
+  }
+};
+var Element = class extends CustomType {
+  constructor(key, namespace, tag, attrs, children2, self_closing, void$) {
+    super();
+    this.key = key;
+    this.namespace = namespace;
+    this.tag = tag;
+    this.attrs = attrs;
+    this.children = children2;
+    this.self_closing = self_closing;
+    this.void = void$;
   }
 };
 var Map2 = class extends CustomType {
@@ -1327,6 +1375,39 @@ function handlers(element2) {
 }
 
 // build/dev/javascript/lustre/lustre/element.mjs
+function element(tag, attrs, children2) {
+  if (tag === "area") {
+    return new Element("", "", tag, attrs, toList([]), false, true);
+  } else if (tag === "base") {
+    return new Element("", "", tag, attrs, toList([]), false, true);
+  } else if (tag === "br") {
+    return new Element("", "", tag, attrs, toList([]), false, true);
+  } else if (tag === "col") {
+    return new Element("", "", tag, attrs, toList([]), false, true);
+  } else if (tag === "embed") {
+    return new Element("", "", tag, attrs, toList([]), false, true);
+  } else if (tag === "hr") {
+    return new Element("", "", tag, attrs, toList([]), false, true);
+  } else if (tag === "img") {
+    return new Element("", "", tag, attrs, toList([]), false, true);
+  } else if (tag === "input") {
+    return new Element("", "", tag, attrs, toList([]), false, true);
+  } else if (tag === "link") {
+    return new Element("", "", tag, attrs, toList([]), false, true);
+  } else if (tag === "meta") {
+    return new Element("", "", tag, attrs, toList([]), false, true);
+  } else if (tag === "param") {
+    return new Element("", "", tag, attrs, toList([]), false, true);
+  } else if (tag === "source") {
+    return new Element("", "", tag, attrs, toList([]), false, true);
+  } else if (tag === "track") {
+    return new Element("", "", tag, attrs, toList([]), false, true);
+  } else if (tag === "wbr") {
+    return new Element("", "", tag, attrs, toList([]), false, true);
+  } else {
+    return new Element("", "", tag, attrs, children2, false, false);
+  }
+}
 function text(content) {
   return new Text(content);
 }
@@ -1730,11 +1811,11 @@ var LustreClientApplication = class _LustreClientApplication {
    *
    * @returns {Gleam.Ok<(action: Lustre.Action<Lustre.Client, Msg>>) => void>}
    */
-  static start({ init: init2, update, view }, selector, flags) {
+  static start({ init: init3, update: update2, view: view2 }, selector, flags) {
     if (!is_browser()) return new Error(new NotABrowser());
     const root = selector instanceof HTMLElement ? selector : document.querySelector(selector);
     if (!root) return new Error(new ElementNotFound(selector));
-    const app = new _LustreClientApplication(root, init2(flags), update, view);
+    const app = new _LustreClientApplication(root, init3(flags), update2, view2);
     return new Ok((action) => app.send(action));
   }
   /**
@@ -1745,11 +1826,11 @@ var LustreClientApplication = class _LustreClientApplication {
    *
    * @returns {LustreClientApplication}
    */
-  constructor(root, [init2, effects], update, view) {
+  constructor(root, [init3, effects], update2, view2) {
     this.root = root;
-    this.#model = init2;
-    this.#update = update;
-    this.#view = view;
+    this.#model = init3;
+    this.#update = update2;
+    this.#view = view2;
     this.#tickScheduled = window.setTimeout(
       () => this.#tick(effects.all.toArray(), true),
       0
@@ -1864,20 +1945,20 @@ var LustreClientApplication = class _LustreClientApplication {
 };
 var start = LustreClientApplication.start;
 var LustreServerApplication = class _LustreServerApplication {
-  static start({ init: init2, update, view, on_attribute_change }, flags) {
+  static start({ init: init3, update: update2, view: view2, on_attribute_change }, flags) {
     const app = new _LustreServerApplication(
-      init2(flags),
-      update,
-      view,
+      init3(flags),
+      update2,
+      view2,
       on_attribute_change
     );
     return new Ok((action) => app.send(action));
   }
-  constructor([model, effects], update, view, on_attribute_change) {
+  constructor([model, effects], update2, view2, on_attribute_change) {
     this.#model = model;
-    this.#update = update;
-    this.#view = view;
-    this.#html = view(model);
+    this.#update = update2;
+    this.#view = view2;
+    this.#html = view2(model);
     this.#onAttributeChange = on_attribute_change;
     this.#renderers = /* @__PURE__ */ new Map();
     this.#handlers = handlers(this.#html);
@@ -1974,11 +2055,11 @@ var is_browser = () => globalThis.window && window.document;
 
 // build/dev/javascript/lustre/lustre.mjs
 var App = class extends CustomType {
-  constructor(init2, update, view, on_attribute_change) {
+  constructor(init3, update2, view2, on_attribute_change) {
     super();
-    this.init = init2;
-    this.update = update;
-    this.view = view;
+    this.init = init3;
+    this.update = update2;
+    this.view = view2;
     this.on_attribute_change = on_attribute_change;
   }
 };
@@ -1990,20 +2071,17 @@ var ElementNotFound = class extends CustomType {
 };
 var NotABrowser = class extends CustomType {
 };
-function application(init2, update, view) {
-  return new App(init2, update, view, new None());
+function application(init3, update2, view2) {
+  return new App(init3, update2, view2, new None());
 }
-function element(html) {
-  let init2 = (_) => {
-    return [void 0, none()];
+function simple(init3, update2, view2) {
+  let init$1 = (flags) => {
+    return [init3(flags), none()];
   };
-  let update = (_, _1) => {
-    return [void 0, none()];
+  let update$1 = (model, msg) => {
+    return [update2(model, msg), none()];
   };
-  let view = (_) => {
-    return html;
-  };
-  return application(init2, update, view);
+  return application(init$1, update$1, view2);
 }
 function start2(app, selector, flags) {
   return guard(
@@ -2015,15 +2093,122 @@ function start2(app, selector, flags) {
   );
 }
 
+// build/dev/javascript/lustre/lustre/element/html.mjs
+function text2(content) {
+  return text(content);
+}
+function h1(attrs, children2) {
+  return element("h1", attrs, children2);
+}
+function h2(attrs, children2) {
+  return element("h2", attrs, children2);
+}
+function div(attrs, children2) {
+  return element("div", attrs, children2);
+}
+function li(attrs, children2) {
+  return element("li", attrs, children2);
+}
+function ul(attrs, children2) {
+  return element("ul", attrs, children2);
+}
+
 // build/dev/javascript/mooquiz/mooquiz.mjs
+var Answer = class extends CustomType {
+  constructor(text3, correct) {
+    super();
+    this.text = text3;
+    this.correct = correct;
+  }
+};
+var Question = class extends CustomType {
+  constructor(id, text3, answers) {
+    super();
+    this.id = id;
+    this.text = text3;
+    this.answers = answers;
+  }
+};
+var Model2 = class extends CustomType {
+  constructor(title, questions) {
+    super();
+    this.title = title;
+    this.questions = questions;
+  }
+};
+function init2(_) {
+  let model = new Model2(
+    "Test Quiz",
+    toList([
+      new Question(
+        1,
+        "Test Question One",
+        toList([
+          new Answer("Correct Answer", true),
+          new Answer("Answer Two", false),
+          new Answer("Answer Three", false),
+          new Answer("Answer Four", false)
+        ])
+      ),
+      new Question(
+        2,
+        "Test Question Two",
+        toList([
+          new Answer("Answer One", false),
+          new Answer("Correct Answer", true),
+          new Answer("Answer Three", false),
+          new Answer("Answer Four", false)
+        ])
+      )
+    ])
+  );
+  return model;
+}
+function update(model, _) {
+  return model;
+}
+function view(model) {
+  return div(
+    toList([]),
+    toList([
+      h1(toList([]), toList([text2(model.title)])),
+      div(
+        toList([]),
+        map(
+          model.questions,
+          (q) => {
+            return div(
+              toList([]),
+              toList([
+                h2(toList([]), toList([text2(q.text)])),
+                ul(
+                  toList([]),
+                  map(
+                    q.answers,
+                    (answer) => {
+                      return li(
+                        toList([]),
+                        toList([text2(answer.text)])
+                      );
+                    }
+                  )
+                )
+              ])
+            );
+          }
+        )
+      )
+    ])
+  );
+}
 function main() {
-  let app = element(text("Hello, world!"));
+  let app = simple(init2, update, view);
   let $ = start2(app, "#app", void 0);
   if (!$.isOk()) {
     throw makeError(
       "let_assert",
       "mooquiz",
-      6,
+      19,
       "main",
       "Pattern match failed, no pattern matched the value.",
       { value: $ }
