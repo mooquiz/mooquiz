@@ -5407,8 +5407,6 @@ function update(model, msg) {
           }
         );
       })();
-      debug("Title: " + title);
-      debug(questions$2);
       return new Model2(title, false, questions$2);
     } else if (msg instanceof GotQuestions && !msg[0].isOk()) {
       debug("Pulling failed");

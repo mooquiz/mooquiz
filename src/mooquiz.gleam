@@ -91,9 +91,6 @@ fn update(model: Model, msg: Msg){
             None)
         })
 
-      io.debug("Title: " <> title)
-      io.debug(questions)
-
       Model(title, False, questions)
     }
     
