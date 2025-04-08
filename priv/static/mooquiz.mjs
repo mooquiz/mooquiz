@@ -36,12 +36,12 @@ var List = class {
   // @internal
   countLength() {
     let current = this;
-    let length3 = 0;
+    let length4 = 0;
     while (current) {
       current = current.tail;
-      length3++;
+      length4++;
     }
-    return length3 - 1;
+    return length4 - 1;
   }
 };
 function prepend(element2, tail) {
@@ -156,11 +156,11 @@ var BitArray = class {
    * @param {number} index
    * @returns {number | undefined}
    */
-  byteAt(index3) {
-    if (index3 < 0 || index3 >= this.byteSize) {
+  byteAt(index4) {
+    if (index4 < 0 || index4 >= this.byteSize) {
       return void 0;
     }
-    return bitArrayByteAt(this.rawBuffer, this.bitOffset, index3);
+    return bitArrayByteAt(this.rawBuffer, this.bitOffset, index4);
   }
   /** @internal */
   equals(other) {
@@ -248,12 +248,12 @@ var BitArray = class {
     return this.rawBuffer.length;
   }
 };
-function bitArrayByteAt(buffer, bitOffset, index3) {
+function bitArrayByteAt(buffer, bitOffset, index4) {
   if (bitOffset === 0) {
-    return buffer[index3] ?? 0;
+    return buffer[index4] ?? 0;
   } else {
-    const a = buffer[index3] << bitOffset & 255;
-    const b = buffer[index3 + 1] >> 8 - bitOffset;
+    const a = buffer[index4] << bitOffset & 255;
+    const b = buffer[index4 + 1] >> 8 - bitOffset;
     return a | b;
   }
 }
@@ -315,9 +315,9 @@ function isEqual(x, y) {
       } catch {
       }
     }
-    let [keys2, get] = getters(a);
+    let [keys2, get2] = getters(a);
     for (let k of keys2(a)) {
-      values2.push(get(a, k), get(b, k));
+      values2.push(get2(a, k), get2(b, k));
     }
   }
   return true;
@@ -358,6 +358,23 @@ function structurallyCompatibleObjects(a, b) {
   if (nonstructural.some((c) => a instanceof c)) return false;
   return a.constructor === b.constructor;
 }
+function remainderInt(a, b) {
+  if (b === 0) {
+    return 0;
+  } else {
+    return a % b;
+  }
+}
+function divideInt(a, b) {
+  return Math.trunc(divideFloat(a, b));
+}
+function divideFloat(a, b) {
+  if (b === 0) {
+    return 0;
+  } else {
+    return a / b;
+  }
+}
 function makeError(variant, module, line, fn, message, extra) {
   let error = new globalThis.Error(message);
   error.gleam_error = variant;
@@ -368,6 +385,14 @@ function makeError(variant, module, line, fn, message, extra) {
   for (let k in extra) error[k] = extra[k];
   return error;
 }
+
+// build/dev/javascript/gleam_stdlib/gleam/order.mjs
+var Lt = class extends CustomType {
+};
+var Eq = class extends CustomType {
+};
+var Gt = class extends CustomType {
+};
 
 // build/dev/javascript/gleam_stdlib/gleam/option.mjs
 var Some = class extends CustomType {
@@ -384,6 +409,14 @@ function to_result(option, e) {
     return new Ok(a);
   } else {
     return new Error(e);
+  }
+}
+function unwrap(option, default$) {
+  if (option instanceof Some) {
+    let x = option[0];
+    return x;
+  } else {
+    return default$;
   }
 }
 
@@ -511,21 +544,41 @@ function index_fold_loop(loop$over, loop$acc, loop$with, loop$index) {
     let over = loop$over;
     let acc = loop$acc;
     let with$ = loop$with;
-    let index3 = loop$index;
+    let index4 = loop$index;
     if (over.hasLength(0)) {
       return acc;
     } else {
       let first$1 = over.head;
       let rest$1 = over.tail;
       loop$over = rest$1;
-      loop$acc = with$(acc, first$1, index3);
+      loop$acc = with$(acc, first$1, index4);
       loop$with = with$;
-      loop$index = index3 + 1;
+      loop$index = index4 + 1;
     }
   }
 }
 function index_fold(list2, initial, fun) {
   return index_fold_loop(list2, initial, fun, 0);
+}
+function find_map(loop$list, loop$fun) {
+  while (true) {
+    let list2 = loop$list;
+    let fun = loop$fun;
+    if (list2.hasLength(0)) {
+      return new Error(void 0);
+    } else {
+      let first$1 = list2.head;
+      let rest$1 = list2.tail;
+      let $ = fun(first$1);
+      if ($.isOk()) {
+        let first$2 = $[0];
+        return new Ok(first$2);
+      } else {
+        loop$list = rest$1;
+        loop$fun = fun;
+      }
+    }
+  }
 }
 function any(loop$list, loop$predicate) {
   while (true) {
@@ -546,8 +599,135 @@ function any(loop$list, loop$predicate) {
     }
   }
 }
+function zip_loop(loop$one, loop$other, loop$acc) {
+  while (true) {
+    let one = loop$one;
+    let other = loop$other;
+    let acc = loop$acc;
+    if (one.atLeastLength(1) && other.atLeastLength(1)) {
+      let first_one = one.head;
+      let rest_one = one.tail;
+      let first_other = other.head;
+      let rest_other = other.tail;
+      loop$one = rest_one;
+      loop$other = rest_other;
+      loop$acc = prepend([first_one, first_other], acc);
+    } else {
+      return reverse(acc);
+    }
+  }
+}
+function zip(list2, other) {
+  return zip_loop(list2, other, toList([]));
+}
+function range_loop(loop$start, loop$stop, loop$acc) {
+  while (true) {
+    let start3 = loop$start;
+    let stop = loop$stop;
+    let acc = loop$acc;
+    let $ = compare2(start3, stop);
+    if ($ instanceof Eq) {
+      return prepend(stop, acc);
+    } else if ($ instanceof Gt) {
+      loop$start = start3;
+      loop$stop = stop + 1;
+      loop$acc = prepend(stop, acc);
+    } else {
+      loop$start = start3;
+      loop$stop = stop - 1;
+      loop$acc = prepend(stop, acc);
+    }
+  }
+}
+function range(start3, stop) {
+  return range_loop(start3, stop, toList([]));
+}
+function key_find(keyword_list, desired_key) {
+  return find_map(
+    keyword_list,
+    (keyword) => {
+      let key = keyword[0];
+      let value3 = keyword[1];
+      let $ = isEqual(key, desired_key);
+      if ($) {
+        return new Ok(value3);
+      } else {
+        return new Error(void 0);
+      }
+    }
+  );
+}
 
 // build/dev/javascript/gleam_stdlib/gleam/string.mjs
+function replace(string4, pattern, substitute) {
+  let _pipe = string4;
+  let _pipe$1 = identity(_pipe);
+  let _pipe$2 = string_replace(_pipe$1, pattern, substitute);
+  return identity(_pipe$2);
+}
+function slice(string4, idx, len) {
+  let $ = len < 0;
+  if ($) {
+    return "";
+  } else {
+    let $1 = idx < 0;
+    if ($1) {
+      let translated_idx = string_length(string4) + idx;
+      let $2 = translated_idx < 0;
+      if ($2) {
+        return "";
+      } else {
+        return string_slice(string4, translated_idx, len);
+      }
+    } else {
+      return string_slice(string4, idx, len);
+    }
+  }
+}
+function concat2(strings) {
+  let _pipe = strings;
+  let _pipe$1 = concat(_pipe);
+  return identity(_pipe$1);
+}
+function repeat_loop(loop$string, loop$times, loop$acc) {
+  while (true) {
+    let string4 = loop$string;
+    let times = loop$times;
+    let acc = loop$acc;
+    let $ = times <= 0;
+    if ($) {
+      return acc;
+    } else {
+      loop$string = string4;
+      loop$times = times - 1;
+      loop$acc = acc + string4;
+    }
+  }
+}
+function repeat(string4, times) {
+  return repeat_loop(string4, times, "");
+}
+function padding(size, pad_string) {
+  let pad_string_length = string_length(pad_string);
+  let num_pads = divideInt(size, pad_string_length);
+  let extra = remainderInt(size, pad_string_length);
+  return repeat(pad_string, num_pads) + slice(pad_string, 0, extra);
+}
+function pad_start(string4, desired_length, pad_string) {
+  let current_length = string_length(string4);
+  let to_pad_length = desired_length - current_length;
+  let $ = to_pad_length <= 0;
+  if ($) {
+    return string4;
+  } else {
+    return padding(to_pad_length, pad_string) + string4;
+  }
+}
+function trim(string4) {
+  let _pipe = string4;
+  let _pipe$1 = trim_start(_pipe);
+  return trim_end(_pipe$1);
+}
 function drop_start(loop$string, loop$num_graphemes) {
   while (true) {
     let string4 = loop$string;
@@ -608,6 +788,26 @@ function try$(result, fun) {
   } else {
     let e = result[0];
     return new Error(e);
+  }
+}
+function then$(result, fun) {
+  return try$(result, fun);
+}
+function unwrap_both(result) {
+  if (result.isOk()) {
+    let a = result[0];
+    return a;
+  } else {
+    let a = result[0];
+    return a;
+  }
+}
+function replace_error(result, error) {
+  if (result.isOk()) {
+    let x = result[0];
+    return new Ok(x);
+  } else {
+    return new Error(error);
   }
 }
 
@@ -1423,12 +1623,37 @@ function float_to_string(float4) {
   if (string4.indexOf(".") >= 0) {
     return string4;
   } else {
-    const index3 = string4.indexOf("e");
-    if (index3 >= 0) {
-      return string4.slice(0, index3) + ".0" + string4.slice(index3);
+    const index4 = string4.indexOf("e");
+    if (index4 >= 0) {
+      return string4.slice(0, index4) + ".0" + string4.slice(index4);
     } else {
       return string4 + ".0";
     }
+  }
+}
+function string_replace(string4, target, substitute) {
+  if (typeof string4.replaceAll !== "undefined") {
+    return string4.replaceAll(target, substitute);
+  }
+  return string4.replace(
+    // $& means the whole matched string
+    new RegExp(target.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"),
+    substitute
+  );
+}
+function string_length(string4) {
+  if (string4 === "") {
+    return 0;
+  }
+  const iterator = graphemes_iterator(string4);
+  if (iterator) {
+    let i = 0;
+    for (const _ of iterator) {
+      i++;
+    }
+    return i;
+  } else {
+    return string4.match(/./gsu).length;
   }
 }
 function graphemes(string4) {
@@ -1460,6 +1685,12 @@ function pop_grapheme(string4) {
     return new Error(Nil);
   }
 }
+function pop_codeunit(str) {
+  return [str.charCodeAt(0) | 0, str.slice(1)];
+}
+function lowercase(string4) {
+  return string4.toLowerCase();
+}
 function split(xs, pattern) {
   return List.fromArray(xs.split(pattern));
 }
@@ -1479,6 +1710,34 @@ function concat(xs) {
     result = result + x;
   }
   return result;
+}
+function string_slice(string4, idx, len) {
+  if (len <= 0 || idx >= string4.length) {
+    return "";
+  }
+  const iterator = graphemes_iterator(string4);
+  if (iterator) {
+    while (idx-- > 0) {
+      iterator.next();
+    }
+    let result = "";
+    while (len-- > 0) {
+      const v = iterator.next().value;
+      if (v === void 0) {
+        break;
+      }
+      result += v.segment;
+    }
+    return result;
+  } else {
+    return string4.match(/./gsu).slice(idx, idx + len).join("");
+  }
+}
+function string_codeunit_slice(str, from2, length4) {
+  return str.slice(from2, from2 + length4);
+}
+function starts_with(haystack, needle) {
+  return haystack.startsWith(needle);
 }
 var unicode_whitespaces = [
   " ",
@@ -1504,6 +1763,12 @@ var trim_start_regex = /* @__PURE__ */ new RegExp(
   `^[${unicode_whitespaces}]*`
 );
 var trim_end_regex = /* @__PURE__ */ new RegExp(`[${unicode_whitespaces}]*$`);
+function trim_start(string4) {
+  return string4.replace(trim_start_regex, "");
+}
+function trim_end(string4) {
+  return string4.replace(trim_end_regex, "");
+}
 function print_debug(string4) {
   if (typeof process === "object" && process.stderr?.write) {
     process.stderr.write(string4 + "\n");
@@ -1516,18 +1781,18 @@ function print_debug(string4) {
 function new_map() {
   return Dict.new();
 }
-function map_to_list(map4) {
-  return List.fromArray(map4.entries());
+function map_to_list(map6) {
+  return List.fromArray(map6.entries());
 }
-function map_get(map4, key) {
-  const value3 = map4.get(key, NOT_FOUND);
+function map_get(map6, key) {
+  const value3 = map6.get(key, NOT_FOUND);
   if (value3 === NOT_FOUND) {
     return new Error(Nil);
   }
   return new Ok(value3);
 }
-function map_insert(key, value3, map4) {
-  return map4.set(key, value3);
+function map_insert(key, value3, map6) {
+  return map6.set(key, value3);
 }
 function classify_dynamic(data) {
   if (typeof data === "string") {
@@ -1651,10 +1916,10 @@ function inspectString(str) {
   new_str += '"';
   return new_str;
 }
-function inspectDict(map4) {
+function inspectDict(map6) {
   let body = "dict.from_list([";
   let first2 = true;
-  map4.forEach((value3, key) => {
+  map6.forEach((value3, key) => {
     if (!first2) body = body + ", ";
     body = body + "#(" + inspect(key) + ", " + inspect(value3) + ")";
     first2 = false;
@@ -1702,12 +1967,93 @@ function bit_array_inspect(bits, acc) {
   return acc;
 }
 
+// build/dev/javascript/gleam_stdlib/gleam/int.mjs
+function compare2(a, b) {
+  let $ = a === b;
+  if ($) {
+    return new Eq();
+  } else {
+    let $1 = a < b;
+    if ($1) {
+      return new Lt();
+    } else {
+      return new Gt();
+    }
+  }
+}
+
 // build/dev/javascript/gleam_stdlib/gleam/io.mjs
 function debug(term) {
   let _pipe = term;
   let _pipe$1 = inspect2(_pipe);
   print_debug(_pipe$1);
   return term;
+}
+
+// build/dev/javascript/gleam_regexp/gleam_regexp_ffi.mjs
+function compile(pattern, options) {
+  try {
+    let flags = "gu";
+    if (options.case_insensitive) flags += "i";
+    if (options.multi_line) flags += "m";
+    return new Ok(new RegExp(pattern, flags));
+  } catch (error) {
+    const number = (error.columnNumber || 0) | 0;
+    return new Error(new CompileError(error.message, number));
+  }
+}
+function scan(regex, string4) {
+  regex.lastIndex = 0;
+  const matches = Array.from(string4.matchAll(regex)).map((match) => {
+    const content = match[0];
+    return new Match(content, submatches(match.slice(1)));
+  });
+  return List.fromArray(matches);
+}
+function submatches(groups) {
+  const submatches2 = [];
+  for (let n = groups.length - 1; n >= 0; n--) {
+    if (groups[n]) {
+      submatches2[n] = new Some(groups[n]);
+      continue;
+    }
+    if (submatches2.length > 0) {
+      submatches2[n] = new None();
+    }
+  }
+  return List.fromArray(submatches2);
+}
+
+// build/dev/javascript/gleam_regexp/gleam/regexp.mjs
+var Match = class extends CustomType {
+  constructor(content, submatches2) {
+    super();
+    this.content = content;
+    this.submatches = submatches2;
+  }
+};
+var CompileError = class extends CustomType {
+  constructor(error, byte_index) {
+    super();
+    this.error = error;
+    this.byte_index = byte_index;
+  }
+};
+var Options = class extends CustomType {
+  constructor(case_insensitive, multi_line) {
+    super();
+    this.case_insensitive = case_insensitive;
+    this.multi_line = multi_line;
+  }
+};
+function compile2(pattern, options) {
+  return compile(pattern, options);
+}
+function from_string(pattern) {
+  return compile2(pattern, new Options(false, false));
+}
+function scan2(regexp, string4) {
+  return scan(regexp, string4);
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/bool.mjs
@@ -1719,6 +2065,1043 @@ function guard(requirement, consequence, alternative) {
   }
 }
 
+// build/dev/javascript/gleam_time/gleam/time/calendar.mjs
+var Date2 = class extends CustomType {
+  constructor(year, month, day) {
+    super();
+    this.year = year;
+    this.month = month;
+    this.day = day;
+  }
+};
+var January = class extends CustomType {
+};
+var February = class extends CustomType {
+};
+var March = class extends CustomType {
+};
+var April = class extends CustomType {
+};
+var May = class extends CustomType {
+};
+var June = class extends CustomType {
+};
+var July = class extends CustomType {
+};
+var August = class extends CustomType {
+};
+var September = class extends CustomType {
+};
+var October = class extends CustomType {
+};
+var November = class extends CustomType {
+};
+var December = class extends CustomType {
+};
+
+// build/dev/javascript/gtempo/gtempo/internal.mjs
+function floor_div(dividend, divisor) {
+  let $ = (dividend > 0 && divisor < 0 || dividend < 0 && divisor > 0) && remainderInt(
+    dividend,
+    divisor
+  ) !== 0;
+  if ($) {
+    return divideInt(dividend, divisor) - 1;
+  } else {
+    return divideInt(dividend, divisor);
+  }
+}
+function modulo_unwrap(dividend, divisor) {
+  let remainder = remainderInt(dividend, divisor);
+  let $ = remainder > 0 && divisor < 0 || remainder < 0 && divisor > 0;
+  if ($) {
+    return remainder + divisor;
+  } else {
+    return remainder;
+  }
+}
+function div_with_remainder(a, b) {
+  return [floor_div(a, b), modulo_unwrap(a, b)];
+}
+var day_microseconds = 864e8;
+var hour_microseconds = 36e8;
+var minute_microseconds = 6e7;
+var second_microseconds = 1e6;
+
+// build/dev/javascript/gtempo/tempo_ffi.mjs
+var speedup = 1;
+var referenceTime = 0;
+var referenceStart = 0;
+var referenceMonotonicStart = 0;
+var mockTime = false;
+var freezeTime = false;
+var warpTime = 0;
+function warped_now() {
+  return Date.now() * 1e3 + warpTime;
+}
+function warped_now_monotonic() {
+  return Math.trunc(performance.now() * 1e3) + warpTime;
+}
+function now() {
+  if (freezeTime) {
+    return referenceTime + warpTime;
+  } else if (mockTime) {
+    let realElaposed = warped_now() - referenceStart;
+    let spedupElapsed = Math.trunc(realElaposed * speedup);
+    return referenceTime + spedupElapsed;
+  }
+  return warped_now();
+}
+function local_offset() {
+  return -(/* @__PURE__ */ new Date()).getTimezoneOffset();
+}
+function now_monotonic() {
+  if (freezeTime) {
+    return referenceTime + warpTime;
+  } else if (mockTime) {
+    let realElapsed = warped_now_monotonic() - referenceMonotonicStart;
+    let spedupElapsed = Math.trunc(realElapsed * speedup);
+    return referenceTime + spedupElapsed;
+  }
+  return warped_now_monotonic();
+}
+var unique = 1;
+function now_unique() {
+  return unique++;
+}
+
+// build/dev/javascript/gtempo/tempo.mjs
+var Instant = class extends CustomType {
+  constructor(timestamp_utc_us, offset_local_us, monotonic_us, unique2) {
+    super();
+    this.timestamp_utc_us = timestamp_utc_us;
+    this.offset_local_us = offset_local_us;
+    this.monotonic_us = monotonic_us;
+    this.unique = unique2;
+  }
+};
+var DateTime = class extends CustomType {
+  constructor(date, time, offset) {
+    super();
+    this.date = date;
+    this.time = time;
+    this.offset = offset;
+  }
+};
+var Offset = class extends CustomType {
+  constructor(minutes2) {
+    super();
+    this.minutes = minutes2;
+  }
+};
+var Date3 = class extends CustomType {
+  constructor(unix_days) {
+    super();
+    this.unix_days = unix_days;
+  }
+};
+var MonthYear = class extends CustomType {
+  constructor(month, year) {
+    super();
+    this.month = month;
+    this.year = year;
+  }
+};
+var TimeOfDay = class extends CustomType {
+  constructor(microseconds) {
+    super();
+    this.microseconds = microseconds;
+  }
+};
+var LastInstantOfDay = class extends CustomType {
+};
+var ISO8601Seconds = class extends CustomType {
+};
+var ISO8601Milli = class extends CustomType {
+};
+var ISO8601Micro = class extends CustomType {
+};
+var HTTP = class extends CustomType {
+};
+var Custom = class extends CustomType {
+  constructor(format2) {
+    super();
+    this.format = format2;
+  }
+};
+var DateFormat = class extends CustomType {
+  constructor(x0) {
+    super();
+    this[0] = x0;
+  }
+};
+var TimeFormat = class extends CustomType {
+  constructor(x0) {
+    super();
+    this[0] = x0;
+  }
+};
+var ISO8601Date = class extends CustomType {
+};
+var CustomDate = class extends CustomType {
+  constructor(format2) {
+    super();
+    this.format = format2;
+  }
+};
+var CustomDateLocalised = class extends CustomType {
+  constructor(format2, locale) {
+    super();
+    this.format = format2;
+    this.locale = locale;
+  }
+};
+var ISO8601TimeSeconds = class extends CustomType {
+};
+var ISO8601TimeMilli = class extends CustomType {
+};
+var ISO8601TimeMicro = class extends CustomType {
+};
+var CustomTime = class extends CustomType {
+  constructor(format2) {
+    super();
+    this.format = format2;
+  }
+};
+var CustomTimeLocalised = class extends CustomType {
+  constructor(format2, locale) {
+    super();
+    this.format = format2;
+    this.locale = locale;
+  }
+};
+function offset_get_minutes(offset) {
+  return offset.minutes;
+}
+function offset_to_string(offset) {
+  let $ = (() => {
+    let $1 = divideInt(offset_get_minutes(offset), 60);
+    if ($1 <= 0) {
+      let h = $1;
+      return [true, -h];
+    } else {
+      let h = $1;
+      return [false, h];
+    }
+  })();
+  let is_negative = $[0];
+  let hours = $[1];
+  let mins = (() => {
+    let $1 = remainderInt(offset_get_minutes(offset), 60);
+    if ($1 < 0) {
+      let m = $1;
+      return -m;
+    } else {
+      let m = $1;
+      return m;
+    }
+  })();
+  if (hours === 0 && mins === 0) {
+    return "+00:00";
+  } else if (hours === 0) {
+    let m = mins;
+    return "-00:" + (() => {
+      let _pipe = to_string(m);
+      return pad_start(_pipe, 2, "0");
+    })();
+  } else if (is_negative) {
+    let h = hours;
+    let m = mins;
+    return "-" + (() => {
+      let _pipe = to_string(h);
+      return pad_start(_pipe, 2, "0");
+    })() + ":" + (() => {
+      let _pipe = to_string(m);
+      return pad_start(_pipe, 2, "0");
+    })();
+  } else {
+    let h = hours;
+    let m = mins;
+    return "+" + (() => {
+      let _pipe = to_string(h);
+      return pad_start(_pipe, 2, "0");
+    })() + ":" + (() => {
+      let _pipe = to_string(m);
+      return pad_start(_pipe, 2, "0");
+    })();
+  }
+}
+function offset_replace_format(content, offset) {
+  if (content === "z") {
+    let $ = offset.minutes;
+    if ($ === 0) {
+      return "Z";
+    } else {
+      let str_offset = (() => {
+        let _pipe = offset;
+        return offset_to_string(_pipe);
+      })();
+      let $1 = (() => {
+        let _pipe = str_offset;
+        return split2(_pipe, ":");
+      })();
+      if ($1.hasLength(2) && $1.tail.head === "00") {
+        let hours = $1.head;
+        return hours;
+      } else {
+        return str_offset;
+      }
+    }
+  } else if (content === "zz") {
+    let $ = offset.minutes;
+    if ($ === 0) {
+      return "Z";
+    } else {
+      let _pipe = offset;
+      return offset_to_string(_pipe);
+    }
+  } else if (content === "Z") {
+    let _pipe = offset;
+    return offset_to_string(_pipe);
+  } else if (content === "ZZ") {
+    let _pipe = offset;
+    let _pipe$1 = offset_to_string(_pipe);
+    return replace(_pipe$1, ":", "");
+  } else {
+    return content;
+  }
+}
+function date_from_unix_micro(unix_micro) {
+  return new Date3(divideInt(unix_micro, day_microseconds));
+}
+function instant_as_utc_date(instant) {
+  return date_from_unix_micro(instant.timestamp_utc_us);
+}
+function instant_as_local_date(instant) {
+  return date_from_unix_micro(
+    instant.timestamp_utc_us + instant.offset_local_us
+  );
+}
+function date_to_day_of_week_number(date) {
+  return remainderInt(date.unix_days + 4, 7);
+}
+function date_to_day_of_week_short(date) {
+  let $ = date_to_day_of_week_number(date);
+  if ($ === 0) {
+    return "Sun";
+  } else if ($ === 1) {
+    return "Mon";
+  } else if ($ === 2) {
+    return "Tue";
+  } else if ($ === 3) {
+    return "Wed";
+  } else if ($ === 4) {
+    return "Thu";
+  } else if ($ === 5) {
+    return "Fri";
+  } else if ($ === 6) {
+    return "Sat";
+  } else {
+    throw makeError(
+      "panic",
+      "tempo",
+      1665,
+      "date_to_day_of_week_short",
+      "Invalid day of week found after modulo by 7",
+      {}
+    );
+  }
+}
+function date_to_day_of_week_long(date) {
+  let $ = date_to_day_of_week_number(date);
+  if ($ === 0) {
+    return "Sunday";
+  } else if ($ === 1) {
+    return "Monday";
+  } else if ($ === 2) {
+    return "Tuesday";
+  } else if ($ === 3) {
+    return "Wednesday";
+  } else if ($ === 4) {
+    return "Thursday";
+  } else if ($ === 5) {
+    return "Friday";
+  } else if ($ === 6) {
+    return "Saturday";
+  } else {
+    throw makeError(
+      "panic",
+      "tempo",
+      1678,
+      "date_to_day_of_week_long",
+      "Invalid day of week found after modulo by 7",
+      {}
+    );
+  }
+}
+function date_days_before_year(year1) {
+  let year = year1 - 1;
+  let leap_years = floor_div(year, 4) - floor_div(year, 100) + floor_div(
+    year,
+    400
+  );
+  return 365 * year + leap_years;
+}
+function month_from_int(month) {
+  if (month === 1) {
+    return new Ok(new January());
+  } else if (month === 2) {
+    return new Ok(new February());
+  } else if (month === 3) {
+    return new Ok(new March());
+  } else if (month === 4) {
+    return new Ok(new April());
+  } else if (month === 5) {
+    return new Ok(new May());
+  } else if (month === 6) {
+    return new Ok(new June());
+  } else if (month === 7) {
+    return new Ok(new July());
+  } else if (month === 8) {
+    return new Ok(new August());
+  } else if (month === 9) {
+    return new Ok(new September());
+  } else if (month === 10) {
+    return new Ok(new October());
+  } else if (month === 11) {
+    return new Ok(new November());
+  } else if (month === 12) {
+    return new Ok(new December());
+  } else {
+    return new Error(void 0);
+  }
+}
+function month_to_int(month) {
+  if (month instanceof January) {
+    return 1;
+  } else if (month instanceof February) {
+    return 2;
+  } else if (month instanceof March) {
+    return 3;
+  } else if (month instanceof April) {
+    return 4;
+  } else if (month instanceof May) {
+    return 5;
+  } else if (month instanceof June) {
+    return 6;
+  } else if (month instanceof July) {
+    return 7;
+  } else if (month instanceof August) {
+    return 8;
+  } else if (month instanceof September) {
+    return 9;
+  } else if (month instanceof October) {
+    return 10;
+  } else if (month instanceof November) {
+    return 11;
+  } else {
+    return 12;
+  }
+}
+function month_to_short_string(month) {
+  if (month instanceof January) {
+    return "Jan";
+  } else if (month instanceof February) {
+    return "Feb";
+  } else if (month instanceof March) {
+    return "Mar";
+  } else if (month instanceof April) {
+    return "Apr";
+  } else if (month instanceof May) {
+    return "May";
+  } else if (month instanceof June) {
+    return "Jun";
+  } else if (month instanceof July) {
+    return "Jul";
+  } else if (month instanceof August) {
+    return "Aug";
+  } else if (month instanceof September) {
+    return "Sep";
+  } else if (month instanceof October) {
+    return "Oct";
+  } else if (month instanceof November) {
+    return "Nov";
+  } else {
+    return "Dec";
+  }
+}
+function month_to_long_string(month) {
+  if (month instanceof January) {
+    return "January";
+  } else if (month instanceof February) {
+    return "February";
+  } else if (month instanceof March) {
+    return "March";
+  } else if (month instanceof April) {
+    return "April";
+  } else if (month instanceof May) {
+    return "May";
+  } else if (month instanceof June) {
+    return "June";
+  } else if (month instanceof July) {
+    return "July";
+  } else if (month instanceof August) {
+    return "August";
+  } else if (month instanceof September) {
+    return "September";
+  } else if (month instanceof October) {
+    return "October";
+  } else if (month instanceof November) {
+    return "November";
+  } else {
+    return "December";
+  }
+}
+function is_leap_year(year) {
+  let $ = remainderInt(year, 4) === 0;
+  if ($) {
+    let $1 = remainderInt(year, 100) === 0;
+    if ($1) {
+      let $2 = remainderInt(year, 400) === 0;
+      if ($2) {
+        return true;
+      } else {
+        return false;
+      }
+    } else {
+      return true;
+    }
+  } else {
+    return false;
+  }
+}
+function month_year_days_of(my) {
+  let $ = my.month;
+  if ($ instanceof January) {
+    return 31;
+  } else if ($ instanceof February) {
+    let $1 = is_leap_year(my.year);
+    if ($1) {
+      return 29;
+    } else {
+      return 28;
+    }
+  } else if ($ instanceof March) {
+    return 31;
+  } else if ($ instanceof April) {
+    return 30;
+  } else if ($ instanceof May) {
+    return 31;
+  } else if ($ instanceof June) {
+    return 30;
+  } else if ($ instanceof July) {
+    return 31;
+  } else if ($ instanceof August) {
+    return 31;
+  } else if ($ instanceof September) {
+    return 30;
+  } else if ($ instanceof October) {
+    return 31;
+  } else if ($ instanceof November) {
+    return 30;
+  } else {
+    return 31;
+  }
+}
+function month_days_of(month, year) {
+  return month_year_days_of(new MonthYear(month, year));
+}
+function do_calculate_rata_die(loop$year, loop$month, loop$ordinal_day) {
+  while (true) {
+    let year = loop$year;
+    let month = loop$month;
+    let ordinal_day = loop$ordinal_day;
+    let days_in_month = month_days_of(month, year);
+    let $ = month_to_int(month) < 12 && ordinal_day > days_in_month;
+    if ($) {
+      loop$year = year;
+      loop$month = (() => {
+        if (month instanceof January) {
+          return new February();
+        } else if (month instanceof February) {
+          return new March();
+        } else if (month instanceof March) {
+          return new April();
+        } else if (month instanceof April) {
+          return new May();
+        } else if (month instanceof May) {
+          return new June();
+        } else if (month instanceof June) {
+          return new July();
+        } else if (month instanceof July) {
+          return new August();
+        } else if (month instanceof August) {
+          return new September();
+        } else if (month instanceof September) {
+          return new October();
+        } else if (month instanceof October) {
+          return new November();
+        } else {
+          return new December();
+        }
+      })();
+      loop$ordinal_day = ordinal_day - days_in_month;
+    } else {
+      return new Date2(year, month, ordinal_day);
+    }
+  }
+}
+function time_normalise(time) {
+  if (time instanceof TimeOfDay && time.microseconds < 0) {
+    let microseconds = time.microseconds;
+    return new TimeOfDay(
+      day_microseconds + remainderInt(
+        microseconds,
+        day_microseconds
+      )
+    );
+  } else if (time instanceof TimeOfDay && time.microseconds >= day_microseconds) {
+    let microseconds = time.microseconds;
+    return new TimeOfDay(remainderInt(microseconds, day_microseconds));
+  } else {
+    return time;
+  }
+}
+function time_from_microseconds(microseconds) {
+  return new TimeOfDay(microseconds);
+}
+function time_get_hour(time) {
+  let $ = time_normalise(time);
+  if ($ instanceof TimeOfDay) {
+    let microseconds = $.microseconds;
+    return divideInt(microseconds, hour_microseconds);
+  } else if ($ instanceof LastInstantOfDay) {
+    return 24;
+  } else {
+    return 23;
+  }
+}
+function time_get_minute(time) {
+  let $ = time_normalise(time);
+  if ($ instanceof TimeOfDay) {
+    let microseconds = $.microseconds;
+    let hour = divideInt(microseconds, hour_microseconds);
+    return divideInt(
+      microseconds - hour * hour_microseconds,
+      minute_microseconds
+    );
+  } else if ($ instanceof LastInstantOfDay) {
+    return 0;
+  } else {
+    return 59;
+  }
+}
+function time_get_second(time) {
+  let $ = time_normalise(time);
+  if ($ instanceof TimeOfDay) {
+    let microseconds = $.microseconds;
+    let hour = divideInt(microseconds, hour_microseconds);
+    let minute = divideInt(
+      microseconds - hour * hour_microseconds,
+      minute_microseconds
+    );
+    return divideInt(
+      microseconds - hour * hour_microseconds - minute * minute_microseconds,
+      second_microseconds
+    );
+  } else if ($ instanceof LastInstantOfDay) {
+    return 0;
+  } else {
+    return 60;
+  }
+}
+function time_get_micro(time) {
+  let $ = time_normalise(time);
+  if ($ instanceof TimeOfDay) {
+    let microseconds = $.microseconds;
+    let hour = divideInt(microseconds, hour_microseconds);
+    let minute = divideInt(
+      microseconds - hour * hour_microseconds,
+      minute_microseconds
+    );
+    let second = divideInt(
+      microseconds - hour * hour_microseconds - minute * minute_microseconds,
+      second_microseconds
+    );
+    return microseconds - hour * hour_microseconds - minute * minute_microseconds - second * second_microseconds;
+  } else if ($ instanceof LastInstantOfDay) {
+    return 0;
+  } else {
+    let microsecond = $.microseconds;
+    return microsecond;
+  }
+}
+function time_replace_format(content, time) {
+  if (content === "H") {
+    let _pipe = time_get_hour(time);
+    return to_string(_pipe);
+  } else if (content === "HH") {
+    let _pipe = time_get_hour(time);
+    let _pipe$1 = to_string(_pipe);
+    return pad_start(_pipe$1, 2, "0");
+  } else if (content === "h") {
+    let _pipe = (() => {
+      let $ = time_get_hour(time);
+      if ($ === 0) {
+        let hour = $;
+        return 12;
+      } else if ($ > 12) {
+        let hour = $;
+        return hour - 12;
+      } else {
+        let hour = $;
+        return hour;
+      }
+    })();
+    return to_string(_pipe);
+  } else if (content === "hh") {
+    let _pipe = (() => {
+      let $ = time_get_hour(time);
+      if ($ === 0) {
+        let hour = $;
+        return 12;
+      } else if ($ > 12) {
+        let hour = $;
+        return hour - 12;
+      } else {
+        let hour = $;
+        return hour;
+      }
+    })();
+    let _pipe$1 = to_string(_pipe);
+    return pad_start(_pipe$1, 2, "0");
+  } else if (content === "a") {
+    let $ = time_get_hour(time) >= 12;
+    if ($) {
+      return "pm";
+    } else {
+      return "am";
+    }
+  } else if (content === "A") {
+    let $ = time_get_hour(time) >= 12;
+    if ($) {
+      return "PM";
+    } else {
+      return "AM";
+    }
+  } else if (content === "m") {
+    let _pipe = time_get_minute(time);
+    return to_string(_pipe);
+  } else if (content === "mm") {
+    let _pipe = time_get_minute(time);
+    let _pipe$1 = to_string(_pipe);
+    return pad_start(_pipe$1, 2, "0");
+  } else if (content === "s") {
+    let _pipe = time_get_second(time);
+    return to_string(_pipe);
+  } else if (content === "ss") {
+    let _pipe = time_get_second(time);
+    let _pipe$1 = to_string(_pipe);
+    return pad_start(_pipe$1, 2, "0");
+  } else if (content === "SSS") {
+    let _pipe = divideInt(time_get_micro(time), 1e3);
+    let _pipe$1 = to_string(_pipe);
+    return pad_start(_pipe$1, 3, "0");
+  } else if (content === "SSSS") {
+    let _pipe = time_get_micro(time);
+    let _pipe$1 = to_string(_pipe);
+    return pad_start(_pipe$1, 6, "0");
+  } else {
+    return content;
+  }
+}
+function time_from_unix_micro(unix_ts) {
+  return time_from_microseconds(remainderInt(unix_ts, day_microseconds));
+}
+function instant_as_utc_time(instant) {
+  return time_from_unix_micro(instant.timestamp_utc_us);
+}
+function instant_as_local_time(instant) {
+  return time_from_unix_micro(
+    instant.timestamp_utc_us + instant.offset_local_us
+  );
+}
+function instant_as_local_datetime(instant) {
+  return new DateTime(
+    instant_as_local_date(instant),
+    instant_as_local_time(instant),
+    new Offset(divideInt(instant.offset_local_us, 6e7))
+  );
+}
+function get_datetime_format_str(format2) {
+  if (format2 instanceof ISO8601Seconds) {
+    return "YYYY-MM-DDTHH:mm:sszz";
+  } else if (format2 instanceof ISO8601Milli) {
+    return "YYYY-MM-DDTHH:mm:ss.SSSzz";
+  } else if (format2 instanceof ISO8601Micro) {
+    return "YYYY-MM-DDTHH:mm:ss.SSSSzz";
+  } else if (format2 instanceof HTTP) {
+    return "ddd, DD MMM YYYY HH:mm:ss GMT";
+  } else if (format2 instanceof DateFormat && format2[0] instanceof ISO8601Date) {
+    return "YYYY-MM-DD";
+  } else if (format2 instanceof TimeFormat && format2[0] instanceof ISO8601TimeSeconds) {
+    return "HH:mm:ss";
+  } else if (format2 instanceof TimeFormat && format2[0] instanceof ISO8601TimeMilli) {
+    return "HH:mm:ss.SSS";
+  } else if (format2 instanceof TimeFormat && format2[0] instanceof ISO8601TimeMicro) {
+    return "HH:mm:ss.SSSS";
+  } else if (format2 instanceof TimeFormat && format2[0] instanceof CustomTime) {
+    let format$1 = format2[0].format;
+    return format$1;
+  } else if (format2 instanceof TimeFormat && format2[0] instanceof CustomTimeLocalised) {
+    let format$1 = format2[0].format;
+    return format$1;
+  } else if (format2 instanceof DateFormat && format2[0] instanceof CustomDate) {
+    let format$1 = format2[0].format;
+    return format$1;
+  } else if (format2 instanceof DateFormat && format2[0] instanceof CustomDateLocalised) {
+    let format$1 = format2[0].format;
+    return format$1;
+  } else if (format2 instanceof Custom) {
+    let format$1 = format2.format;
+    return format$1;
+  } else {
+    let format$1 = format2.format;
+    return format$1;
+  }
+}
+function offset_local_micro() {
+  return local_offset() * 6e7;
+}
+function now2() {
+  return new Instant(
+    now(),
+    offset_local_micro(),
+    now_monotonic(),
+    now_unique()
+  );
+}
+var utc = /* @__PURE__ */ new Offset(0);
+function instant_as_utc_datetime(instant) {
+  return new DateTime(
+    instant_as_utc_date(instant),
+    instant_as_utc_time(instant),
+    utc
+  );
+}
+var unix_epoch_in_rata_die = 719163;
+function date_to_rata_die(date) {
+  return date.unix_days + unix_epoch_in_rata_die;
+}
+function date_get_year(date) {
+  let rd = date_to_rata_die(date);
+  let $ = div_with_remainder(rd, 146097);
+  let n400 = $[0];
+  let r400 = $[1];
+  let $1 = div_with_remainder(r400, 36524);
+  let n100 = $1[0];
+  let r100 = $1[1];
+  let $2 = div_with_remainder(r100, 1461);
+  let n4 = $2[0];
+  let r4 = $2[1];
+  let $3 = div_with_remainder(r4, 365);
+  let n1 = $3[0];
+  let r1 = $3[1];
+  let n = (() => {
+    let $4 = r1 === 0;
+    if ($4) {
+      return 0;
+    } else {
+      return 1;
+    }
+  })();
+  return n400 * 400 + n100 * 100 + n4 * 4 + n1 + n;
+}
+function date_calendar_from_unix_days(unix_days) {
+  let $ = unix_days >= 0;
+  if ($) {
+    let z = unix_days + 719468;
+    let era = divideInt(
+      (() => {
+        let $12 = z >= 0;
+        if ($12) {
+          return z;
+        } else {
+          return z - 146096;
+        }
+      })(),
+      146097
+    );
+    let doe = z - era * 146097;
+    let yoe = divideInt(
+      doe - divideInt(doe, 1460) + divideInt(doe, 36524) - divideInt(
+        doe,
+        146096
+      ),
+      365
+    );
+    let y = yoe + era * 400;
+    let doy = doe - (365 * yoe + divideInt(yoe, 4) - divideInt(yoe, 100));
+    let mp = divideInt(5 * doy + 2, 153);
+    let d = doy - divideInt(153 * mp + 2, 5) + 1;
+    let m = mp + (() => {
+      let $12 = mp < 10;
+      if ($12) {
+        return 3;
+      } else {
+        return -9;
+      }
+    })();
+    let y$1 = (() => {
+      let $12 = m <= 2;
+      if ($12) {
+        return y + 1;
+      } else {
+        return y;
+      }
+    })();
+    let $1 = month_from_int(m);
+    if (!$1.isOk()) {
+      throw makeError(
+        "let_assert",
+        "tempo",
+        1743,
+        "date_calendar_from_unix_days",
+        "Pattern match failed, no pattern matched the value.",
+        { value: $1 }
+      );
+    }
+    let month = $1[0];
+    return new Date2(y$1, month, d);
+  } else {
+    let rata_die = (() => {
+      let _pipe = new Date3(unix_days);
+      return date_to_rata_die(_pipe);
+    })();
+    let ordinal_year = (() => {
+      let _pipe = new Date3(unix_days);
+      return date_get_year(_pipe);
+    })();
+    let ordinal_date = rata_die - date_days_before_year(ordinal_year);
+    return do_calculate_rata_die(
+      ordinal_year,
+      new January(),
+      ordinal_date
+    );
+  }
+}
+function date_to_calendar_date(date) {
+  return date_calendar_from_unix_days(date.unix_days);
+}
+function date_replace_format(content, date) {
+  let calendar_date = date_to_calendar_date(date);
+  if (content === "YY") {
+    let _pipe = calendar_date.year;
+    let _pipe$1 = to_string(_pipe);
+    let _pipe$2 = pad_start(_pipe$1, 2, "0");
+    return slice(_pipe$2, -2, 2);
+  } else if (content === "YYYY") {
+    let _pipe = calendar_date.year;
+    let _pipe$1 = to_string(_pipe);
+    return pad_start(_pipe$1, 4, "0");
+  } else if (content === "M") {
+    let _pipe = calendar_date.month;
+    let _pipe$1 = month_to_int(_pipe);
+    return to_string(_pipe$1);
+  } else if (content === "MM") {
+    let _pipe = calendar_date.month;
+    let _pipe$1 = month_to_int(_pipe);
+    let _pipe$2 = to_string(_pipe$1);
+    return pad_start(_pipe$2, 2, "0");
+  } else if (content === "MMM") {
+    let _pipe = calendar_date.month;
+    return month_to_short_string(_pipe);
+  } else if (content === "MMMM") {
+    let _pipe = calendar_date.month;
+    return month_to_long_string(_pipe);
+  } else if (content === "D") {
+    let _pipe = calendar_date.day;
+    return to_string(_pipe);
+  } else if (content === "DD") {
+    let _pipe = calendar_date.day;
+    let _pipe$1 = to_string(_pipe);
+    return pad_start(_pipe$1, 2, "0");
+  } else if (content === "d") {
+    let _pipe = date;
+    let _pipe$1 = date_to_day_of_week_number(_pipe);
+    return to_string(_pipe$1);
+  } else if (content === "dd") {
+    let _pipe = date;
+    let _pipe$1 = date_to_day_of_week_short(_pipe);
+    return slice(_pipe$1, 0, 2);
+  } else if (content === "ddd") {
+    let _pipe = date;
+    return date_to_day_of_week_short(_pipe);
+  } else if (content === "dddd") {
+    let _pipe = date;
+    return date_to_day_of_week_long(_pipe);
+  } else {
+    return content;
+  }
+}
+var format_regex = "\\[([^\\]]+)\\]|Y{1,4}|M{1,4}|D{1,2}|d{1,4}|H{1,2}|h{1,2}|a|A|m{1,2}|s{1,2}|Z{1,2}|z{1,2}|S{3,4}|GMT|.";
+function datetime_format(datetime, format2) {
+  let format_str = get_datetime_format_str(format2);
+  let $ = from_string(format_regex);
+  if (!$.isOk()) {
+    throw makeError(
+      "let_assert",
+      "tempo",
+      1e3,
+      "datetime_format",
+      "Pattern match failed, no pattern matched the value.",
+      { value: $ }
+    );
+  }
+  let re = $[0];
+  let _pipe = scan2(re, format_str);
+  let _pipe$1 = reverse(_pipe);
+  let _pipe$2 = fold(
+    _pipe$1,
+    toList([]),
+    (acc, match) => {
+      if (match instanceof Match && match.submatches.hasLength(0)) {
+        let content = match.content;
+        return prepend(
+          (() => {
+            let _pipe$22 = content;
+            let _pipe$3 = date_replace_format(_pipe$22, datetime.date);
+            let _pipe$4 = time_replace_format(_pipe$3, datetime.time);
+            return offset_replace_format(_pipe$4, datetime.offset);
+          })(),
+          acc
+        );
+      } else if (match instanceof Match && match.submatches.hasLength(1) && match.submatches.head instanceof Some) {
+        let sub = match.submatches.head[0];
+        return prepend(sub, acc);
+      } else {
+        let content = match.content;
+        return prepend(content, acc);
+      }
+    }
+  );
+  return join(_pipe$2, "");
+}
+function format_utc(format2) {
+  let _pipe = now2();
+  let _pipe$1 = instant_as_utc_datetime(_pipe);
+  return datetime_format(_pipe$1, format2);
+}
+function format_local(format2) {
+  if (format2 instanceof HTTP) {
+    return format_utc(new HTTP());
+  } else {
+    let _pipe = now2();
+    let _pipe$1 = instant_as_local_datetime(_pipe);
+    return datetime_format(_pipe$1, format2);
+  }
+}
+
 // build/dev/javascript/lustre/lustre/effect.mjs
 var Effect = class extends CustomType {
   constructor(all) {
@@ -1726,6 +3109,20 @@ var Effect = class extends CustomType {
     this.all = all;
   }
 };
+function custom(run2) {
+  return new Effect(
+    toList([
+      (actions) => {
+        return run2(actions.dispatch, actions.emit, actions.select, actions.root);
+      }
+    ])
+  );
+}
+function from(effect) {
+  return custom((dispatch, _, _1, _2) => {
+    return effect(dispatch);
+  });
+}
 function none() {
   return new Effect(toList([]));
 }
@@ -1784,8 +3181,8 @@ function do_element_list_handlers(elements2, handlers2, key) {
   return index_fold(
     elements2,
     handlers2,
-    (handlers3, element2, index3) => {
-      let key$1 = key + "-" + to_string(index3);
+    (handlers3, element2, index4) => {
+      let key$1 = key + "-" + to_string(index4);
       return do_handlers(element2, handlers3, key$1);
     }
   );
@@ -2547,15 +3944,6 @@ var NotABrowser = class extends CustomType {
 function application(init3, update2, view2) {
   return new App(init3, update2, view2, new None());
 }
-function simple(init3, update2, view2) {
-  let init$1 = (flags) => {
-    return [init3(flags), none()];
-  };
-  let update$1 = (model, msg) => {
-    return [update2(model, msg), none()];
-  };
-  return application(init$1, update$1, view2);
-}
 function start2(app, selector, flags) {
   return guard(
     !is_browser(),
@@ -2620,6 +4008,1269 @@ function on_input(msg) {
   );
 }
 
+// build/dev/javascript/gleam_stdlib/gleam/uri.mjs
+var Uri = class extends CustomType {
+  constructor(scheme, userinfo, host, port, path, query, fragment) {
+    super();
+    this.scheme = scheme;
+    this.userinfo = userinfo;
+    this.host = host;
+    this.port = port;
+    this.path = path;
+    this.query = query;
+    this.fragment = fragment;
+  }
+};
+function is_valid_host_within_brackets_char(char) {
+  return 48 >= char && char <= 57 || 65 >= char && char <= 90 || 97 >= char && char <= 122 || char === 58 || char === 46;
+}
+function parse_fragment(rest, pieces) {
+  return new Ok(
+    (() => {
+      let _record = pieces;
+      return new Uri(
+        _record.scheme,
+        _record.userinfo,
+        _record.host,
+        _record.port,
+        _record.path,
+        _record.query,
+        new Some(rest)
+      );
+    })()
+  );
+}
+function parse_query_with_question_mark_loop(loop$original, loop$uri_string, loop$pieces, loop$size) {
+  while (true) {
+    let original = loop$original;
+    let uri_string = loop$uri_string;
+    let pieces = loop$pieces;
+    let size = loop$size;
+    if (uri_string.startsWith("#") && size === 0) {
+      let rest = uri_string.slice(1);
+      return parse_fragment(rest, pieces);
+    } else if (uri_string.startsWith("#")) {
+      let rest = uri_string.slice(1);
+      let query = string_codeunit_slice(original, 0, size);
+      let pieces$1 = (() => {
+        let _record = pieces;
+        return new Uri(
+          _record.scheme,
+          _record.userinfo,
+          _record.host,
+          _record.port,
+          _record.path,
+          new Some(query),
+          _record.fragment
+        );
+      })();
+      return parse_fragment(rest, pieces$1);
+    } else if (uri_string === "") {
+      return new Ok(
+        (() => {
+          let _record = pieces;
+          return new Uri(
+            _record.scheme,
+            _record.userinfo,
+            _record.host,
+            _record.port,
+            _record.path,
+            new Some(original),
+            _record.fragment
+          );
+        })()
+      );
+    } else {
+      let $ = pop_codeunit(uri_string);
+      let rest = $[1];
+      loop$original = original;
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$size = size + 1;
+    }
+  }
+}
+function parse_query_with_question_mark(uri_string, pieces) {
+  return parse_query_with_question_mark_loop(uri_string, uri_string, pieces, 0);
+}
+function parse_path_loop(loop$original, loop$uri_string, loop$pieces, loop$size) {
+  while (true) {
+    let original = loop$original;
+    let uri_string = loop$uri_string;
+    let pieces = loop$pieces;
+    let size = loop$size;
+    if (uri_string.startsWith("?")) {
+      let rest = uri_string.slice(1);
+      let path = string_codeunit_slice(original, 0, size);
+      let pieces$1 = (() => {
+        let _record = pieces;
+        return new Uri(
+          _record.scheme,
+          _record.userinfo,
+          _record.host,
+          _record.port,
+          path,
+          _record.query,
+          _record.fragment
+        );
+      })();
+      return parse_query_with_question_mark(rest, pieces$1);
+    } else if (uri_string.startsWith("#")) {
+      let rest = uri_string.slice(1);
+      let path = string_codeunit_slice(original, 0, size);
+      let pieces$1 = (() => {
+        let _record = pieces;
+        return new Uri(
+          _record.scheme,
+          _record.userinfo,
+          _record.host,
+          _record.port,
+          path,
+          _record.query,
+          _record.fragment
+        );
+      })();
+      return parse_fragment(rest, pieces$1);
+    } else if (uri_string === "") {
+      return new Ok(
+        (() => {
+          let _record = pieces;
+          return new Uri(
+            _record.scheme,
+            _record.userinfo,
+            _record.host,
+            _record.port,
+            original,
+            _record.query,
+            _record.fragment
+          );
+        })()
+      );
+    } else {
+      let $ = pop_codeunit(uri_string);
+      let rest = $[1];
+      loop$original = original;
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$size = size + 1;
+    }
+  }
+}
+function parse_path(uri_string, pieces) {
+  return parse_path_loop(uri_string, uri_string, pieces, 0);
+}
+function parse_port_loop(loop$uri_string, loop$pieces, loop$port) {
+  while (true) {
+    let uri_string = loop$uri_string;
+    let pieces = loop$pieces;
+    let port = loop$port;
+    if (uri_string.startsWith("0")) {
+      let rest = uri_string.slice(1);
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$port = port * 10;
+    } else if (uri_string.startsWith("1")) {
+      let rest = uri_string.slice(1);
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$port = port * 10 + 1;
+    } else if (uri_string.startsWith("2")) {
+      let rest = uri_string.slice(1);
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$port = port * 10 + 2;
+    } else if (uri_string.startsWith("3")) {
+      let rest = uri_string.slice(1);
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$port = port * 10 + 3;
+    } else if (uri_string.startsWith("4")) {
+      let rest = uri_string.slice(1);
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$port = port * 10 + 4;
+    } else if (uri_string.startsWith("5")) {
+      let rest = uri_string.slice(1);
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$port = port * 10 + 5;
+    } else if (uri_string.startsWith("6")) {
+      let rest = uri_string.slice(1);
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$port = port * 10 + 6;
+    } else if (uri_string.startsWith("7")) {
+      let rest = uri_string.slice(1);
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$port = port * 10 + 7;
+    } else if (uri_string.startsWith("8")) {
+      let rest = uri_string.slice(1);
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$port = port * 10 + 8;
+    } else if (uri_string.startsWith("9")) {
+      let rest = uri_string.slice(1);
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$port = port * 10 + 9;
+    } else if (uri_string.startsWith("?")) {
+      let rest = uri_string.slice(1);
+      let pieces$1 = (() => {
+        let _record = pieces;
+        return new Uri(
+          _record.scheme,
+          _record.userinfo,
+          _record.host,
+          new Some(port),
+          _record.path,
+          _record.query,
+          _record.fragment
+        );
+      })();
+      return parse_query_with_question_mark(rest, pieces$1);
+    } else if (uri_string.startsWith("#")) {
+      let rest = uri_string.slice(1);
+      let pieces$1 = (() => {
+        let _record = pieces;
+        return new Uri(
+          _record.scheme,
+          _record.userinfo,
+          _record.host,
+          new Some(port),
+          _record.path,
+          _record.query,
+          _record.fragment
+        );
+      })();
+      return parse_fragment(rest, pieces$1);
+    } else if (uri_string.startsWith("/")) {
+      let pieces$1 = (() => {
+        let _record = pieces;
+        return new Uri(
+          _record.scheme,
+          _record.userinfo,
+          _record.host,
+          new Some(port),
+          _record.path,
+          _record.query,
+          _record.fragment
+        );
+      })();
+      return parse_path(uri_string, pieces$1);
+    } else if (uri_string === "") {
+      return new Ok(
+        (() => {
+          let _record = pieces;
+          return new Uri(
+            _record.scheme,
+            _record.userinfo,
+            _record.host,
+            new Some(port),
+            _record.path,
+            _record.query,
+            _record.fragment
+          );
+        })()
+      );
+    } else {
+      return new Error(void 0);
+    }
+  }
+}
+function parse_port(uri_string, pieces) {
+  if (uri_string.startsWith(":0")) {
+    let rest = uri_string.slice(2);
+    return parse_port_loop(rest, pieces, 0);
+  } else if (uri_string.startsWith(":1")) {
+    let rest = uri_string.slice(2);
+    return parse_port_loop(rest, pieces, 1);
+  } else if (uri_string.startsWith(":2")) {
+    let rest = uri_string.slice(2);
+    return parse_port_loop(rest, pieces, 2);
+  } else if (uri_string.startsWith(":3")) {
+    let rest = uri_string.slice(2);
+    return parse_port_loop(rest, pieces, 3);
+  } else if (uri_string.startsWith(":4")) {
+    let rest = uri_string.slice(2);
+    return parse_port_loop(rest, pieces, 4);
+  } else if (uri_string.startsWith(":5")) {
+    let rest = uri_string.slice(2);
+    return parse_port_loop(rest, pieces, 5);
+  } else if (uri_string.startsWith(":6")) {
+    let rest = uri_string.slice(2);
+    return parse_port_loop(rest, pieces, 6);
+  } else if (uri_string.startsWith(":7")) {
+    let rest = uri_string.slice(2);
+    return parse_port_loop(rest, pieces, 7);
+  } else if (uri_string.startsWith(":8")) {
+    let rest = uri_string.slice(2);
+    return parse_port_loop(rest, pieces, 8);
+  } else if (uri_string.startsWith(":9")) {
+    let rest = uri_string.slice(2);
+    return parse_port_loop(rest, pieces, 9);
+  } else if (uri_string.startsWith(":")) {
+    return new Error(void 0);
+  } else if (uri_string.startsWith("?")) {
+    let rest = uri_string.slice(1);
+    return parse_query_with_question_mark(rest, pieces);
+  } else if (uri_string.startsWith("#")) {
+    let rest = uri_string.slice(1);
+    return parse_fragment(rest, pieces);
+  } else if (uri_string.startsWith("/")) {
+    return parse_path(uri_string, pieces);
+  } else if (uri_string === "") {
+    return new Ok(pieces);
+  } else {
+    return new Error(void 0);
+  }
+}
+function parse_host_outside_of_brackets_loop(loop$original, loop$uri_string, loop$pieces, loop$size) {
+  while (true) {
+    let original = loop$original;
+    let uri_string = loop$uri_string;
+    let pieces = loop$pieces;
+    let size = loop$size;
+    if (uri_string === "") {
+      return new Ok(
+        (() => {
+          let _record = pieces;
+          return new Uri(
+            _record.scheme,
+            _record.userinfo,
+            new Some(original),
+            _record.port,
+            _record.path,
+            _record.query,
+            _record.fragment
+          );
+        })()
+      );
+    } else if (uri_string.startsWith(":")) {
+      let host = string_codeunit_slice(original, 0, size);
+      let pieces$1 = (() => {
+        let _record = pieces;
+        return new Uri(
+          _record.scheme,
+          _record.userinfo,
+          new Some(host),
+          _record.port,
+          _record.path,
+          _record.query,
+          _record.fragment
+        );
+      })();
+      return parse_port(uri_string, pieces$1);
+    } else if (uri_string.startsWith("/")) {
+      let host = string_codeunit_slice(original, 0, size);
+      let pieces$1 = (() => {
+        let _record = pieces;
+        return new Uri(
+          _record.scheme,
+          _record.userinfo,
+          new Some(host),
+          _record.port,
+          _record.path,
+          _record.query,
+          _record.fragment
+        );
+      })();
+      return parse_path(uri_string, pieces$1);
+    } else if (uri_string.startsWith("?")) {
+      let rest = uri_string.slice(1);
+      let host = string_codeunit_slice(original, 0, size);
+      let pieces$1 = (() => {
+        let _record = pieces;
+        return new Uri(
+          _record.scheme,
+          _record.userinfo,
+          new Some(host),
+          _record.port,
+          _record.path,
+          _record.query,
+          _record.fragment
+        );
+      })();
+      return parse_query_with_question_mark(rest, pieces$1);
+    } else if (uri_string.startsWith("#")) {
+      let rest = uri_string.slice(1);
+      let host = string_codeunit_slice(original, 0, size);
+      let pieces$1 = (() => {
+        let _record = pieces;
+        return new Uri(
+          _record.scheme,
+          _record.userinfo,
+          new Some(host),
+          _record.port,
+          _record.path,
+          _record.query,
+          _record.fragment
+        );
+      })();
+      return parse_fragment(rest, pieces$1);
+    } else {
+      let $ = pop_codeunit(uri_string);
+      let rest = $[1];
+      loop$original = original;
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$size = size + 1;
+    }
+  }
+}
+function parse_host_within_brackets_loop(loop$original, loop$uri_string, loop$pieces, loop$size) {
+  while (true) {
+    let original = loop$original;
+    let uri_string = loop$uri_string;
+    let pieces = loop$pieces;
+    let size = loop$size;
+    if (uri_string === "") {
+      return new Ok(
+        (() => {
+          let _record = pieces;
+          return new Uri(
+            _record.scheme,
+            _record.userinfo,
+            new Some(uri_string),
+            _record.port,
+            _record.path,
+            _record.query,
+            _record.fragment
+          );
+        })()
+      );
+    } else if (uri_string.startsWith("]") && size === 0) {
+      let rest = uri_string.slice(1);
+      return parse_port(rest, pieces);
+    } else if (uri_string.startsWith("]")) {
+      let rest = uri_string.slice(1);
+      let host = string_codeunit_slice(original, 0, size + 1);
+      let pieces$1 = (() => {
+        let _record = pieces;
+        return new Uri(
+          _record.scheme,
+          _record.userinfo,
+          new Some(host),
+          _record.port,
+          _record.path,
+          _record.query,
+          _record.fragment
+        );
+      })();
+      return parse_port(rest, pieces$1);
+    } else if (uri_string.startsWith("/") && size === 0) {
+      return parse_path(uri_string, pieces);
+    } else if (uri_string.startsWith("/")) {
+      let host = string_codeunit_slice(original, 0, size);
+      let pieces$1 = (() => {
+        let _record = pieces;
+        return new Uri(
+          _record.scheme,
+          _record.userinfo,
+          new Some(host),
+          _record.port,
+          _record.path,
+          _record.query,
+          _record.fragment
+        );
+      })();
+      return parse_path(uri_string, pieces$1);
+    } else if (uri_string.startsWith("?") && size === 0) {
+      let rest = uri_string.slice(1);
+      return parse_query_with_question_mark(rest, pieces);
+    } else if (uri_string.startsWith("?")) {
+      let rest = uri_string.slice(1);
+      let host = string_codeunit_slice(original, 0, size);
+      let pieces$1 = (() => {
+        let _record = pieces;
+        return new Uri(
+          _record.scheme,
+          _record.userinfo,
+          new Some(host),
+          _record.port,
+          _record.path,
+          _record.query,
+          _record.fragment
+        );
+      })();
+      return parse_query_with_question_mark(rest, pieces$1);
+    } else if (uri_string.startsWith("#") && size === 0) {
+      let rest = uri_string.slice(1);
+      return parse_fragment(rest, pieces);
+    } else if (uri_string.startsWith("#")) {
+      let rest = uri_string.slice(1);
+      let host = string_codeunit_slice(original, 0, size);
+      let pieces$1 = (() => {
+        let _record = pieces;
+        return new Uri(
+          _record.scheme,
+          _record.userinfo,
+          new Some(host),
+          _record.port,
+          _record.path,
+          _record.query,
+          _record.fragment
+        );
+      })();
+      return parse_fragment(rest, pieces$1);
+    } else {
+      let $ = pop_codeunit(uri_string);
+      let char = $[0];
+      let rest = $[1];
+      let $1 = is_valid_host_within_brackets_char(char);
+      if ($1) {
+        loop$original = original;
+        loop$uri_string = rest;
+        loop$pieces = pieces;
+        loop$size = size + 1;
+      } else {
+        return parse_host_outside_of_brackets_loop(
+          original,
+          original,
+          pieces,
+          0
+        );
+      }
+    }
+  }
+}
+function parse_host_within_brackets(uri_string, pieces) {
+  return parse_host_within_brackets_loop(uri_string, uri_string, pieces, 0);
+}
+function parse_host_outside_of_brackets(uri_string, pieces) {
+  return parse_host_outside_of_brackets_loop(uri_string, uri_string, pieces, 0);
+}
+function parse_host(uri_string, pieces) {
+  if (uri_string.startsWith("[")) {
+    return parse_host_within_brackets(uri_string, pieces);
+  } else if (uri_string.startsWith(":")) {
+    let pieces$1 = (() => {
+      let _record = pieces;
+      return new Uri(
+        _record.scheme,
+        _record.userinfo,
+        new Some(""),
+        _record.port,
+        _record.path,
+        _record.query,
+        _record.fragment
+      );
+    })();
+    return parse_port(uri_string, pieces$1);
+  } else if (uri_string === "") {
+    return new Ok(
+      (() => {
+        let _record = pieces;
+        return new Uri(
+          _record.scheme,
+          _record.userinfo,
+          new Some(""),
+          _record.port,
+          _record.path,
+          _record.query,
+          _record.fragment
+        );
+      })()
+    );
+  } else {
+    return parse_host_outside_of_brackets(uri_string, pieces);
+  }
+}
+function parse_userinfo_loop(loop$original, loop$uri_string, loop$pieces, loop$size) {
+  while (true) {
+    let original = loop$original;
+    let uri_string = loop$uri_string;
+    let pieces = loop$pieces;
+    let size = loop$size;
+    if (uri_string.startsWith("@") && size === 0) {
+      let rest = uri_string.slice(1);
+      return parse_host(rest, pieces);
+    } else if (uri_string.startsWith("@")) {
+      let rest = uri_string.slice(1);
+      let userinfo = string_codeunit_slice(original, 0, size);
+      let pieces$1 = (() => {
+        let _record = pieces;
+        return new Uri(
+          _record.scheme,
+          new Some(userinfo),
+          _record.host,
+          _record.port,
+          _record.path,
+          _record.query,
+          _record.fragment
+        );
+      })();
+      return parse_host(rest, pieces$1);
+    } else if (uri_string === "") {
+      return parse_host(original, pieces);
+    } else if (uri_string.startsWith("/")) {
+      return parse_host(original, pieces);
+    } else if (uri_string.startsWith("?")) {
+      return parse_host(original, pieces);
+    } else if (uri_string.startsWith("#")) {
+      return parse_host(original, pieces);
+    } else {
+      let $ = pop_codeunit(uri_string);
+      let rest = $[1];
+      loop$original = original;
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$size = size + 1;
+    }
+  }
+}
+function parse_authority_pieces(string4, pieces) {
+  return parse_userinfo_loop(string4, string4, pieces, 0);
+}
+function parse_authority_with_slashes(uri_string, pieces) {
+  if (uri_string === "//") {
+    return new Ok(
+      (() => {
+        let _record = pieces;
+        return new Uri(
+          _record.scheme,
+          _record.userinfo,
+          new Some(""),
+          _record.port,
+          _record.path,
+          _record.query,
+          _record.fragment
+        );
+      })()
+    );
+  } else if (uri_string.startsWith("//")) {
+    let rest = uri_string.slice(2);
+    return parse_authority_pieces(rest, pieces);
+  } else {
+    return parse_path(uri_string, pieces);
+  }
+}
+function parse_scheme_loop(loop$original, loop$uri_string, loop$pieces, loop$size) {
+  while (true) {
+    let original = loop$original;
+    let uri_string = loop$uri_string;
+    let pieces = loop$pieces;
+    let size = loop$size;
+    if (uri_string.startsWith("/") && size === 0) {
+      return parse_authority_with_slashes(uri_string, pieces);
+    } else if (uri_string.startsWith("/")) {
+      let scheme = string_codeunit_slice(original, 0, size);
+      let pieces$1 = (() => {
+        let _record = pieces;
+        return new Uri(
+          new Some(lowercase(scheme)),
+          _record.userinfo,
+          _record.host,
+          _record.port,
+          _record.path,
+          _record.query,
+          _record.fragment
+        );
+      })();
+      return parse_authority_with_slashes(uri_string, pieces$1);
+    } else if (uri_string.startsWith("?") && size === 0) {
+      let rest = uri_string.slice(1);
+      return parse_query_with_question_mark(rest, pieces);
+    } else if (uri_string.startsWith("?")) {
+      let rest = uri_string.slice(1);
+      let scheme = string_codeunit_slice(original, 0, size);
+      let pieces$1 = (() => {
+        let _record = pieces;
+        return new Uri(
+          new Some(lowercase(scheme)),
+          _record.userinfo,
+          _record.host,
+          _record.port,
+          _record.path,
+          _record.query,
+          _record.fragment
+        );
+      })();
+      return parse_query_with_question_mark(rest, pieces$1);
+    } else if (uri_string.startsWith("#") && size === 0) {
+      let rest = uri_string.slice(1);
+      return parse_fragment(rest, pieces);
+    } else if (uri_string.startsWith("#")) {
+      let rest = uri_string.slice(1);
+      let scheme = string_codeunit_slice(original, 0, size);
+      let pieces$1 = (() => {
+        let _record = pieces;
+        return new Uri(
+          new Some(lowercase(scheme)),
+          _record.userinfo,
+          _record.host,
+          _record.port,
+          _record.path,
+          _record.query,
+          _record.fragment
+        );
+      })();
+      return parse_fragment(rest, pieces$1);
+    } else if (uri_string.startsWith(":") && size === 0) {
+      return new Error(void 0);
+    } else if (uri_string.startsWith(":")) {
+      let rest = uri_string.slice(1);
+      let scheme = string_codeunit_slice(original, 0, size);
+      let pieces$1 = (() => {
+        let _record = pieces;
+        return new Uri(
+          new Some(lowercase(scheme)),
+          _record.userinfo,
+          _record.host,
+          _record.port,
+          _record.path,
+          _record.query,
+          _record.fragment
+        );
+      })();
+      return parse_authority_with_slashes(rest, pieces$1);
+    } else if (uri_string === "") {
+      return new Ok(
+        (() => {
+          let _record = pieces;
+          return new Uri(
+            _record.scheme,
+            _record.userinfo,
+            _record.host,
+            _record.port,
+            original,
+            _record.query,
+            _record.fragment
+          );
+        })()
+      );
+    } else {
+      let $ = pop_codeunit(uri_string);
+      let rest = $[1];
+      loop$original = original;
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$size = size + 1;
+    }
+  }
+}
+function to_string2(uri) {
+  let parts = (() => {
+    let $ = uri.fragment;
+    if ($ instanceof Some) {
+      let fragment = $[0];
+      return toList(["#", fragment]);
+    } else {
+      return toList([]);
+    }
+  })();
+  let parts$1 = (() => {
+    let $ = uri.query;
+    if ($ instanceof Some) {
+      let query = $[0];
+      return prepend("?", prepend(query, parts));
+    } else {
+      return parts;
+    }
+  })();
+  let parts$2 = prepend(uri.path, parts$1);
+  let parts$3 = (() => {
+    let $ = uri.host;
+    let $1 = starts_with(uri.path, "/");
+    if ($ instanceof Some && !$1 && $[0] !== "") {
+      let host = $[0];
+      return prepend("/", parts$2);
+    } else {
+      return parts$2;
+    }
+  })();
+  let parts$4 = (() => {
+    let $ = uri.host;
+    let $1 = uri.port;
+    if ($ instanceof Some && $1 instanceof Some) {
+      let port = $1[0];
+      return prepend(":", prepend(to_string(port), parts$3));
+    } else {
+      return parts$3;
+    }
+  })();
+  let parts$5 = (() => {
+    let $ = uri.scheme;
+    let $1 = uri.userinfo;
+    let $2 = uri.host;
+    if ($ instanceof Some && $1 instanceof Some && $2 instanceof Some) {
+      let s = $[0];
+      let u = $1[0];
+      let h = $2[0];
+      return prepend(
+        s,
+        prepend(
+          "://",
+          prepend(u, prepend("@", prepend(h, parts$4)))
+        )
+      );
+    } else if ($ instanceof Some && $1 instanceof None && $2 instanceof Some) {
+      let s = $[0];
+      let h = $2[0];
+      return prepend(s, prepend("://", prepend(h, parts$4)));
+    } else if ($ instanceof Some && $1 instanceof Some && $2 instanceof None) {
+      let s = $[0];
+      return prepend(s, prepend(":", parts$4));
+    } else if ($ instanceof Some && $1 instanceof None && $2 instanceof None) {
+      let s = $[0];
+      return prepend(s, prepend(":", parts$4));
+    } else if ($ instanceof None && $1 instanceof None && $2 instanceof Some) {
+      let h = $2[0];
+      return prepend("//", prepend(h, parts$4));
+    } else {
+      return parts$4;
+    }
+  })();
+  return concat2(parts$5);
+}
+var empty2 = /* @__PURE__ */ new Uri(
+  /* @__PURE__ */ new None(),
+  /* @__PURE__ */ new None(),
+  /* @__PURE__ */ new None(),
+  /* @__PURE__ */ new None(),
+  "",
+  /* @__PURE__ */ new None(),
+  /* @__PURE__ */ new None()
+);
+function parse(uri_string) {
+  return parse_scheme_loop(uri_string, uri_string, empty2, 0);
+}
+
+// build/dev/javascript/gleam_http/gleam/http.mjs
+var Get = class extends CustomType {
+};
+var Post = class extends CustomType {
+};
+var Head = class extends CustomType {
+};
+var Put = class extends CustomType {
+};
+var Delete = class extends CustomType {
+};
+var Trace = class extends CustomType {
+};
+var Connect = class extends CustomType {
+};
+var Options2 = class extends CustomType {
+};
+var Patch = class extends CustomType {
+};
+var Http = class extends CustomType {
+};
+var Https = class extends CustomType {
+};
+function method_to_string(method) {
+  if (method instanceof Connect) {
+    return "CONNECT";
+  } else if (method instanceof Delete) {
+    return "DELETE";
+  } else if (method instanceof Get) {
+    return "GET";
+  } else if (method instanceof Head) {
+    return "HEAD";
+  } else if (method instanceof Options2) {
+    return "OPTIONS";
+  } else if (method instanceof Patch) {
+    return "PATCH";
+  } else if (method instanceof Post) {
+    return "POST";
+  } else if (method instanceof Put) {
+    return "PUT";
+  } else if (method instanceof Trace) {
+    return "TRACE";
+  } else {
+    let s = method[0];
+    return s;
+  }
+}
+function scheme_to_string(scheme) {
+  if (scheme instanceof Http) {
+    return "http";
+  } else {
+    return "https";
+  }
+}
+function scheme_from_string(scheme) {
+  let $ = lowercase(scheme);
+  if ($ === "http") {
+    return new Ok(new Http());
+  } else if ($ === "https") {
+    return new Ok(new Https());
+  } else {
+    return new Error(void 0);
+  }
+}
+
+// build/dev/javascript/gleam_http/gleam/http/request.mjs
+var Request = class extends CustomType {
+  constructor(method, headers, body, scheme, host, port, path, query) {
+    super();
+    this.method = method;
+    this.headers = headers;
+    this.body = body;
+    this.scheme = scheme;
+    this.host = host;
+    this.port = port;
+    this.path = path;
+    this.query = query;
+  }
+};
+function to_uri(request) {
+  return new Uri(
+    new Some(scheme_to_string(request.scheme)),
+    new None(),
+    new Some(request.host),
+    request.port,
+    request.path,
+    request.query,
+    new None()
+  );
+}
+function from_uri(uri) {
+  return then$(
+    (() => {
+      let _pipe = uri.scheme;
+      let _pipe$1 = unwrap(_pipe, "");
+      return scheme_from_string(_pipe$1);
+    })(),
+    (scheme) => {
+      return then$(
+        (() => {
+          let _pipe = uri.host;
+          return to_result(_pipe, void 0);
+        })(),
+        (host) => {
+          let req = new Request(
+            new Get(),
+            toList([]),
+            "",
+            scheme,
+            host,
+            uri.port,
+            uri.path,
+            uri.query
+          );
+          return new Ok(req);
+        }
+      );
+    }
+  );
+}
+
+// build/dev/javascript/gleam_http/gleam/http/response.mjs
+var Response = class extends CustomType {
+  constructor(status, headers, body) {
+    super();
+    this.status = status;
+    this.headers = headers;
+    this.body = body;
+  }
+};
+function get_header(response, key) {
+  return key_find(response.headers, lowercase(key));
+}
+
+// build/dev/javascript/gleam_javascript/gleam_javascript_ffi.mjs
+var PromiseLayer = class _PromiseLayer {
+  constructor(promise) {
+    this.promise = promise;
+  }
+  static wrap(value3) {
+    return value3 instanceof Promise ? new _PromiseLayer(value3) : value3;
+  }
+  static unwrap(value3) {
+    return value3 instanceof _PromiseLayer ? value3.promise : value3;
+  }
+};
+function resolve(value3) {
+  return Promise.resolve(PromiseLayer.wrap(value3));
+}
+function then_await(promise, fn) {
+  return promise.then((value3) => fn(PromiseLayer.unwrap(value3)));
+}
+function map_promise(promise, fn) {
+  return promise.then(
+    (value3) => PromiseLayer.wrap(fn(PromiseLayer.unwrap(value3)))
+  );
+}
+
+// build/dev/javascript/gleam_javascript/gleam/javascript/promise.mjs
+function tap(promise, callback) {
+  let _pipe = promise;
+  return map_promise(
+    _pipe,
+    (a) => {
+      callback(a);
+      return a;
+    }
+  );
+}
+function try_await(promise, callback) {
+  let _pipe = promise;
+  return then_await(
+    _pipe,
+    (result) => {
+      if (result.isOk()) {
+        let a = result[0];
+        return callback(a);
+      } else {
+        let e = result[0];
+        return resolve(new Error(e));
+      }
+    }
+  );
+}
+
+// build/dev/javascript/gleam_fetch/gleam_fetch_ffi.mjs
+async function raw_send(request) {
+  try {
+    return new Ok(await fetch(request));
+  } catch (error) {
+    return new Error(new NetworkError(error.toString()));
+  }
+}
+function from_fetch_response(response) {
+  return new Response(
+    response.status,
+    List.fromArray([...response.headers]),
+    response
+  );
+}
+function request_common(request) {
+  let url = to_string2(to_uri(request));
+  let method = method_to_string(request.method).toUpperCase();
+  let options = {
+    headers: make_headers(request.headers),
+    method
+  };
+  return [url, options];
+}
+function to_fetch_request(request) {
+  let [url, options] = request_common(request);
+  if (options.method !== "GET" && options.method !== "HEAD") options.body = request.body;
+  return new globalThis.Request(url, options);
+}
+function make_headers(headersList) {
+  let headers = new globalThis.Headers();
+  for (let [k, v] of headersList) headers.append(k.toLowerCase(), v);
+  return headers;
+}
+async function read_text_body(response) {
+  let body;
+  try {
+    body = await response.body.text();
+  } catch (error) {
+    return new Error(new UnableToReadBody());
+  }
+  return new Ok(response.withFields({ body }));
+}
+
+// build/dev/javascript/gleam_fetch/gleam/fetch.mjs
+var NetworkError = class extends CustomType {
+  constructor(x0) {
+    super();
+    this[0] = x0;
+  }
+};
+var UnableToReadBody = class extends CustomType {
+};
+function send(request) {
+  let _pipe = request;
+  let _pipe$1 = to_fetch_request(_pipe);
+  let _pipe$2 = raw_send(_pipe$1);
+  return try_await(
+    _pipe$2,
+    (resp) => {
+      return resolve(new Ok(from_fetch_response(resp)));
+    }
+  );
+}
+
+// build/dev/javascript/rsvp/rsvp.ffi.mjs
+var from_relative_url = (url_string) => {
+  if (!globalThis.location) return new Error(void 0);
+  const url = new URL(url_string, globalThis.location.href);
+  const uri = uri_from_url(url);
+  return new Ok(uri);
+};
+var uri_from_url = (url) => {
+  const optional = (value3) => value3 ? new Some(value3) : new None();
+  return new Uri(
+    /* scheme   */
+    optional(url.protocol?.slice(0, -1)),
+    /* userinfo */
+    new None(),
+    /* host     */
+    optional(url.hostname),
+    /* port     */
+    optional(url.port && Number(url.port)),
+    /* path     */
+    url.pathname,
+    /* query    */
+    optional(url.search?.slice(1)),
+    /* fragment */
+    optional(url.hash?.slice(1))
+  );
+};
+
+// build/dev/javascript/rsvp/rsvp.mjs
+var BadBody = class extends CustomType {
+};
+var BadUrl = class extends CustomType {
+  constructor(x0) {
+    super();
+    this[0] = x0;
+  }
+};
+var HttpError = class extends CustomType {
+  constructor(x0) {
+    super();
+    this[0] = x0;
+  }
+};
+var NetworkError2 = class extends CustomType {
+};
+var UnhandledResponse = class extends CustomType {
+  constructor(x0) {
+    super();
+    this[0] = x0;
+  }
+};
+var Handler = class extends CustomType {
+  constructor(run2) {
+    super();
+    this.run = run2;
+  }
+};
+function expect_ok_response(handler) {
+  return new Handler(
+    (result) => {
+      return handler(
+        try$(
+          result,
+          (response) => {
+            let $ = response.status;
+            if ($ >= 200 && $ < 300) {
+              let code = $;
+              return new Ok(response);
+            } else if ($ >= 400 && $ < 600) {
+              let code = $;
+              return new Error(new HttpError(response));
+            } else {
+              return new Error(new UnhandledResponse(response));
+            }
+          }
+        )
+      );
+    }
+  );
+}
+function expect_text_response(handler) {
+  return expect_ok_response(
+    (result) => {
+      return handler(
+        try$(
+          result,
+          (response) => {
+            let $ = get_header(response, "content-type");
+            if ($.isOk() && $[0].startsWith("text/")) {
+              return new Ok(response);
+            } else {
+              return new Error(new UnhandledResponse(response));
+            }
+          }
+        )
+      );
+    }
+  );
+}
+function expect_text(handler) {
+  return expect_text_response(
+    (result) => {
+      let _pipe = result;
+      let _pipe$1 = map2(_pipe, (response) => {
+        return response.body;
+      });
+      return handler(_pipe$1);
+    }
+  );
+}
+function do_send(request, handler) {
+  return from(
+    (dispatch) => {
+      let _pipe = send(request);
+      let _pipe$1 = try_await(_pipe, read_text_body);
+      let _pipe$2 = map_promise(
+        _pipe$1,
+        (_capture) => {
+          return map_error(
+            _capture,
+            (error) => {
+              if (error instanceof NetworkError) {
+                return new NetworkError2();
+              } else if (error instanceof UnableToReadBody) {
+                return new BadBody();
+              } else {
+                return new BadBody();
+              }
+            }
+          );
+        }
+      );
+      let _pipe$3 = map_promise(_pipe$2, handler.run);
+      tap(_pipe$3, dispatch);
+      return void 0;
+    }
+  );
+}
+function send2(request, handler) {
+  return do_send(request, handler);
+}
+function reject(err, handler) {
+  return from(
+    (dispatch) => {
+      let _pipe = new Error(err);
+      let _pipe$1 = handler.run(_pipe);
+      return dispatch(_pipe$1);
+    }
+  );
+}
+function to_uri2(uri_string) {
+  let _pipe = (() => {
+    if (uri_string.startsWith("./")) {
+      return from_relative_url(uri_string);
+    } else if (uri_string.startsWith("/")) {
+      return from_relative_url(uri_string);
+    } else {
+      return parse(uri_string);
+    }
+  })();
+  return replace_error(_pipe, new BadUrl(uri_string));
+}
+function get(url, handler) {
+  let $ = to_uri2(url);
+  if ($.isOk()) {
+    let uri = $[0];
+    let _pipe = from_uri(uri);
+    let _pipe$1 = map2(
+      _pipe,
+      (_capture) => {
+        return send2(_capture, handler);
+      }
+    );
+    let _pipe$2 = map_error(
+      _pipe$1,
+      (_) => {
+        return reject(new BadUrl(url), handler);
+      }
+    );
+    return unwrap_both(_pipe$2);
+  } else {
+    let err = $[0];
+    return reject(err, handler);
+  }
+}
+
 // build/dev/javascript/mooquiz/mooquiz.mjs
 var Answer = class extends CustomType {
   constructor(pos, text3) {
@@ -2646,6 +5297,12 @@ var SelectAnswer = class extends CustomType {
     this[0] = x0;
   }
 };
+var GotQuestions = class extends CustomType {
+  constructor(x0) {
+    super();
+    this[0] = x0;
+  }
+};
 var Model2 = class extends CustomType {
   constructor(title, submitted, questions) {
     super();
@@ -2654,39 +5311,6 @@ var Model2 = class extends CustomType {
     this.questions = questions;
   }
 };
-function init2(_) {
-  let model = new Model2(
-    "Test Quiz",
-    false,
-    toList([
-      new Question(
-        1,
-        "Test Question One",
-        toList([
-          new Answer(1, "Correct Answer"),
-          new Answer(2, "Answer Two"),
-          new Answer(3, "Answer Three"),
-          new Answer(4, "Answer Four")
-        ]),
-        1,
-        new None()
-      ),
-      new Question(
-        2,
-        "Test Question Two",
-        toList([
-          new Answer(1, "Answer One"),
-          new Answer(2, "Correct Answer"),
-          new Answer(3, "Answer Three"),
-          new Answer(4, "Answer Four")
-        ]),
-        2,
-        new None()
-      )
-    ])
-  );
-  return model;
-}
 function unanswered_questions(model) {
   return any(
     model.questions,
@@ -2696,57 +5320,152 @@ function unanswered_questions(model) {
   );
 }
 function update(model, msg) {
-  if (msg instanceof SubmitAnswers) {
-    let $ = unanswered_questions(model);
-    if ($) {
-      return model;
-    } else {
-      debug("Submitted Answers");
-      let _record = model;
-      return new Model2(_record.title, true, _record.questions);
-    }
-  } else {
-    let value3 = msg[0];
-    let $ = split2(value3, "-");
-    if ($.hasLength(2)) {
-      let question_id = $.head;
-      let answer = $.tail.head;
-      let $1 = parse_int(question_id);
-      if ($1.isOk()) {
-        let qpos = $1[0];
-        let questions = map(
-          model.questions,
-          (question) => {
-            let $2 = qpos === question.id;
-            if (!$2) {
-              return question;
-            } else {
-              let $3 = parse_int(answer);
-              if ($3.isOk()) {
-                let apos = $3[0];
-                let _record2 = question;
-                return new Question(
-                  _record2.id,
-                  _record2.text,
-                  _record2.answers,
-                  _record2.correct,
-                  new Some(apos)
-                );
-              } else {
-                return question;
+  let model$1 = (() => {
+    if (msg instanceof GotQuestions && msg[0].isOk()) {
+      let file = msg[0][0];
+      debug("Pulled Questions");
+      let $ = (() => {
+        let _pipe = file;
+        let _pipe$1 = trim(_pipe);
+        return split2(_pipe$1, "\n\n");
+      })();
+      if (!$.atLeastLength(1)) {
+        throw makeError(
+          "let_assert",
+          "mooquiz",
+          57,
+          "update",
+          "Pattern match failed, no pattern matched the value.",
+          { value: $ }
+        );
+      }
+      let title = $.head;
+      let questions = $.tail;
+      let questions$1 = map(
+        questions,
+        (q) => {
+          let $1 = split2(q, "\n");
+          if (!$1.atLeastLength(2)) {
+            throw makeError(
+              "let_assert",
+              "mooquiz",
+              59,
+              "",
+              "Pattern match failed, no pattern matched the value.",
+              { value: $1 }
+            );
+          }
+          let question_text = $1.head;
+          let correct = $1.tail.head;
+          let answers = $1.tail.tail;
+          let answers$1 = (() => {
+            let _pipe = answers;
+            let _pipe$1 = length(_pipe);
+            let _pipe$2 = range(_pipe$1, 1);
+            let _pipe$3 = reverse(_pipe$2);
+            let _pipe$4 = zip(_pipe$3, answers);
+            return map(
+              _pipe$4,
+              (a) => {
+                let id = a[0];
+                let text3 = a[1];
+                return new Answer(id, text3);
               }
-            }
+            );
+          })();
+          return [question_text, correct, answers$1];
+        }
+      );
+      let questions$2 = (() => {
+        let _pipe = questions$1;
+        let _pipe$1 = length(_pipe);
+        let _pipe$2 = range(_pipe$1, 1);
+        let _pipe$3 = reverse(_pipe$2);
+        let _pipe$4 = zip(_pipe$3, questions$1);
+        return map(
+          _pipe$4,
+          (q) => {
+            let id = q[0];
+            let question_text = q[1][0];
+            let correct = q[1][1];
+            let answers = q[1][2];
+            return new Question(
+              id,
+              question_text,
+              answers,
+              (() => {
+                let $1 = parse_int(correct);
+                if ($1.isOk()) {
+                  let correct$1 = $1[0];
+                  return correct$1;
+                } else {
+                  return 0;
+                }
+              })(),
+              new None()
+            );
           }
         );
+      })();
+      debug("Title: " + title);
+      debug(questions$2);
+      return new Model2(title, false, questions$2);
+    } else if (msg instanceof GotQuestions && !msg[0].isOk()) {
+      debug("Pulling failed");
+      return model;
+    } else if (msg instanceof SubmitAnswers) {
+      let $ = unanswered_questions(model);
+      if ($) {
+        return model;
+      } else {
+        debug("Submitted Answers");
         let _record = model;
-        return new Model2(_record.title, _record.submitted, questions);
+        return new Model2(_record.title, true, _record.questions);
+      }
+    } else {
+      let value3 = msg[0];
+      let $ = split2(value3, "-");
+      if ($.hasLength(2)) {
+        let question_id = $.head;
+        let answer = $.tail.head;
+        let $1 = parse_int(question_id);
+        if ($1.isOk()) {
+          let qpos = $1[0];
+          let questions = map(
+            model.questions,
+            (question) => {
+              let $2 = qpos === question.id;
+              if (!$2) {
+                return question;
+              } else {
+                let $3 = parse_int(answer);
+                if ($3.isOk()) {
+                  let apos = $3[0];
+                  let _record2 = question;
+                  return new Question(
+                    _record2.id,
+                    _record2.text,
+                    _record2.answers,
+                    _record2.correct,
+                    new Some(apos)
+                  );
+                } else {
+                  return question;
+                }
+              }
+            }
+          );
+          let _record = model;
+          return new Model2(_record.title, _record.submitted, questions);
+        } else {
+          return model;
+        }
       } else {
         return model;
       }
-    } else {
-      return model;
     }
-  }
+  })();
+  return [model$1, none()];
 }
 function calculate_results(questions) {
   let score = count(
@@ -2912,14 +5631,30 @@ function view(model) {
     ])
   );
 }
+var questions_dir_url = "https://raw.githubusercontent.com/mooquiz/Questions/refs/heads/main/";
+function init2(_) {
+  let model = new Model2("Loading", false, toList([]));
+  let questions_url = questions_dir_url + format_local(
+    new Custom("YYYYMMDD")
+  ) + ".txt";
+  return [
+    model,
+    get(
+      questions_url,
+      expect_text((var0) => {
+        return new GotQuestions(var0);
+      })
+    )
+  ];
+}
 function main2() {
-  let app = simple(init2, update, view);
+  let app = application(init2, update, view);
   let $ = start2(app, "#app", void 0);
   if (!$.isOk()) {
     throw makeError(
       "let_assert",
       "mooquiz",
-      30,
+      36,
       "main",
       "Pattern match failed, no pattern matched the value.",
       { value: $ }

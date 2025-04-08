@@ -1,12 +1,17 @@
 import lustre
 import lustre/element/html
 import lustre/event
+import lustre/effect
 import lustre/attribute
+import tempo
 import gleam/option.{type Option, Some, None}
 import gleam/string
 import gleam/list
 import gleam/int
 import gleam/io
+import rsvp
+
+const questions_dir_url = "https://raw.githubusercontent.com/mooquiz/Questions/refs/heads/main/"
 
 type Answer {
   Answer(pos: Int, text: String)
@@ -19,6 +24,7 @@ type Question {
 type Msg {
   SubmitAnswers
   SelectAnswer(String)
+  GotQuestions(Result(String, rsvp.Error))
 }
 
 type Model {
@@ -26,41 +32,75 @@ type Model {
 }
 
 pub fn main() {
-  let app = lustre.simple(init, update, view)
+  let app = lustre.application(init, update, view)
   let assert Ok(_) = lustre.start(app, "#app", Nil)
 
   Nil
 }
 
-fn init(_flags) -> Model {
+fn init(_flags) -> #(Model, effect.Effect(Msg)) {
   let model = Model(
-    title: "Test Quiz", 
+    title: "Loading",
     submitted: False,
-    questions: [
-      Question(1, 
-        "Test Question One", [
-          Answer(1, "Correct Answer"),
-          Answer(2, "Answer Two"),
-          Answer(3, "Answer Three"),
-          Answer(4, "Answer Four")
-        ], 1, None
-      ),
-      Question(2, 
-        "Test Question Two", [
-          Answer(1, "Answer One"),
-          Answer(2, "Correct Answer"),
-          Answer(3, "Answer Three"),
-          Answer(4, "Answer Four")
-        ], 2, None
-      )
-    ]
+    questions: []
   )
 
-  model
-}
+  let questions_url = questions_dir_url <> tempo.format_local(tempo.Custom("YYYYMMDD")) <> ".txt"
+
+  #(model, rsvp.get(questions_url, rsvp.expect_text(GotQuestions)))
+} 
 
 fn update(model: Model, msg: Msg){
-  case msg {
+  let model = case msg {
+    GotQuestions(Ok(file)) -> {
+      io.debug("Pulled Questions")
+      let assert [title, ..questions] = file |> string.trim |> string.split("\n\n")
+      let questions = list.map(questions, fn (q) {
+        let assert [question_text, correct, ..answers] = string.split(q, "\n")
+        
+        let answers = 
+          answers
+          |> list.length
+          |> list.range(1)
+          |> list.reverse
+          |> list.zip(answers)
+          |> list.map(fn(a) {
+              let #(id, text) = a
+              Answer(id, text)
+          })
+
+        #(question_text, correct, answers)
+      })
+
+      let questions =
+        questions
+        |> list.length
+        |> list.range(1)
+        |> list.reverse
+        |> list.zip(questions)
+        |> list.map(fn(q) {
+          let #(id, #(question_text, correct, answers)) = q
+          Question(
+            id, 
+            question_text, 
+            answers, 
+            case int.parse(correct) {
+              Ok(correct) -> correct
+              Error(Nil) -> 0
+            }, 
+            None)
+        })
+
+      io.debug("Title: " <> title)
+      io.debug(questions)
+
+      Model(title, False, questions)
+    }
+    
+    GotQuestions(Error(_)) -> {
+      io.debug("Pulling failed")
+      model
+    }
     SubmitAnswers -> { 
       case unanswered_questions(model) {
         True -> model
@@ -94,6 +134,8 @@ fn update(model: Model, msg: Msg){
       }
     }
   }
+  
+  #(model, effect.none())
 }
 
 fn unanswered_questions(model: Model) {
