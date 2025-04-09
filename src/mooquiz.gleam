@@ -60,10 +60,10 @@ fn update(model: Model, msg: Msg){
         
         let answers = 
           answers
-          |> list.length
-          |> list.range(1)
-          |> list.reverse
-          |> list.zip(answers)
+					|> list.length
+					|> list.range(1)
+					|> list.reverse
+					|> list.zip(answers)
           |> list.map(fn(a) {
               let #(id, text) = a
               Answer(id, text)
@@ -74,10 +74,10 @@ fn update(model: Model, msg: Msg){
 
       let questions =
         questions
-        |> list.length
-        |> list.range(1)
-        |> list.reverse
-        |> list.zip(questions)
+				|> list.length
+				|> list.range(1)
+				|> list.reverse
+				|> list.zip(questions)
         |> list.map(fn(q) {
           let #(id, #(question_text, correct, answers)) = q
           Question(
@@ -173,7 +173,7 @@ fn calculate_results(questions: List(Question)) {
   let share_string = list.map(questions, fn(q) {
     case q.selected == Some(q.correct) {
       False -> "❌"
-      True -> "✅"
+      True -> "✔️"
     }
   })
   #(share_string, score, out_of)
@@ -181,7 +181,7 @@ fn calculate_results(questions: List(Question)) {
 
 fn answer_radio(question: Question, answer: Answer, submitted: Bool) {
   case submitted, question.selected == Some(answer.pos), question.correct == answer.pos { 
-    True, _, True, -> html.text("✅")
+    True, _, True, -> html.text("✔️")
     True, True, False -> html.text("❌")
     True, _, _ -> html.text("")
     _, _, _ -> {

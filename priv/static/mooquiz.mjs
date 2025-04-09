@@ -5480,7 +5480,7 @@ function calculate_results(questions) {
       if (!$) {
         return "\u274C";
       } else {
-        return "\u2705";
+        return "\u2714\uFE0F";
       }
     }
   );
@@ -5539,7 +5539,7 @@ function answer_radio(question, answer, submitted) {
   let $ = isEqual(question.selected, new Some(answer.pos));
   let $1 = question.correct === answer.pos;
   if (submitted && $1) {
-    return text2("\u2705");
+    return text2("\u2714\uFE0F");
   } else if (submitted && $ && !$1) {
     return text2("\u274C");
   } else if (submitted) {
