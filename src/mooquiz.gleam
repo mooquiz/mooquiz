@@ -10,6 +10,8 @@ import gleam/list
 import gleam/int
 import gleam/io
 import rsvp
+import plinth/javascript/storage
+import varasto
 
 const questions_dir_url = "https://raw.githubusercontent.com/mooquiz/Questions/refs/heads/main/"
 
@@ -91,20 +93,19 @@ fn update(model: Model, msg: Msg){
             None)
         })
 
-      Model(title, False, questions)
+      #(Model(title, False, questions), effect.none())
     }
     
     GotQuestions(Error(_)) -> {
       io.debug("Pulling failed")
-      model
+      #(model, effect.none())
     }
     SubmitAnswers -> { 
       case unanswered_questions(model) {
-        True -> model
+        True -> #(model, effect.none())
         False -> {
           io.debug("Submitted Answers")
-          //list.
-          Model(..model, submitted: True)
+          #(Model(..model, submitted: True), effect.none())
         }
       }
     }
@@ -122,17 +123,15 @@ fn update(model: Model, msg: Msg){
                   }
                 }
               })
-              Model(..model, questions: questions)
+              #(Model(..model, questions: questions), effect.none())
             }
-            Error(Nil) -> model
+            Error(Nil) -> #(model, effect.none())
           }
         }
-        _ -> model
+        _ -> #(model, effect.none())
       }
     }
   }
-  
-  #(model, effect.none())
 }
 
 fn unanswered_questions(model: Model) {
