@@ -5338,6 +5338,8 @@ var QuizResult = class extends CustomType {
     this.out_of = out_of;
   }
 };
+var ReadAnswers = class extends CustomType {
+};
 var SubmitAnswers = class extends CustomType {
 };
 var SelectAnswer = class extends CustomType {
@@ -5374,7 +5376,7 @@ function date_format() {
 }
 function save_results(result) {
   return from(
-    (dispatch) => {
+    (_) => {
       return set_localstorage(
         date_format(),
         (() => {
@@ -5411,7 +5413,9 @@ function calculate_results(questions) {
   return new QuizResult(answers, score, out_of);
 }
 function update(model, msg) {
-  if (msg instanceof GotQuestions && msg[0].isOk()) {
+  if (msg instanceof ReadAnswers) {
+    return [model, none()];
+  } else if (msg instanceof GotQuestions && msg[0].isOk()) {
     let file = msg[0][0];
     debug("Pulled Questions");
     let $ = (() => {
@@ -5423,7 +5427,7 @@ function update(model, msg) {
       throw makeError(
         "let_assert",
         "mooquiz",
-        62,
+        66,
         "update",
         "Pattern match failed, no pattern matched the value.",
         { value: $ }
@@ -5439,7 +5443,7 @@ function update(model, msg) {
           throw makeError(
             "let_assert",
             "mooquiz",
-            64,
+            68,
             "",
             "Pattern match failed, no pattern matched the value.",
             { value: $1 }
@@ -5734,7 +5738,7 @@ function main2() {
     throw makeError(
       "let_assert",
       "mooquiz",
-      41,
+      42,
       "main",
       "Pattern match failed, no pattern matched the value.",
       { value: $ }
