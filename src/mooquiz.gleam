@@ -6,12 +6,11 @@ import lustre/attribute
 import tempo
 import gleam/option.{type Option, Some, None}
 import gleam/string
+import gleam/json
 import gleam/list
 import gleam/int
 import gleam/io
 import rsvp
-import plinth/javascript/storage
-import varasto
 
 const questions_dir_url = "https://raw.githubusercontent.com/mooquiz/Questions/refs/heads/main/"
 
@@ -21,6 +20,10 @@ type Answer {
 
 type Question {
   Question(id: Int, text: String, answers: List(Answer), correct: Int, selected: Option(Int))
+}
+
+type QuizResult {
+  QuizResult(answers: List(Bool), score: Int, out_of: Int)
 }
 
 type Msg {
@@ -47,13 +50,13 @@ fn init(_flags) -> #(Model, effect.Effect(Msg)) {
     questions: []
   )
 
-  let questions_url = questions_dir_url <> tempo.format_local(tempo.Custom("YYYYMMDD")) <> ".txt"
+  let questions_url = questions_dir_url <> date_format() <> ".txt"
 
   #(model, rsvp.get(questions_url, rsvp.expect_text(GotQuestions)))
 } 
 
 fn update(model: Model, msg: Msg){
-  let model = case msg {
+  case msg {
     GotQuestions(Ok(file)) -> {
       io.debug("Pulled Questions")
       let assert [title, ..questions] = file |> string.trim |> string.split("\n\n")
@@ -105,7 +108,7 @@ fn update(model: Model, msg: Msg){
         True -> #(model, effect.none())
         False -> {
           io.debug("Submitted Answers")
-          #(Model(..model, submitted: True), effect.none())
+          #(Model(..model, submitted: True), save_results(calculate_results(model.questions)))
         }
       }
     }
@@ -134,6 +137,30 @@ fn update(model: Model, msg: Msg){
   }
 }
 
+fn save_results(result: QuizResult) {
+	effect.from(fn(dispatch) {
+		set_localstorage(date_format(), result |> encode_result |> json.to_string)
+	})
+}
+
+fn encode_result(result: QuizResult) -> json.Json {
+  json.object([
+    #("shareString", json.array(result.answers, of: json.bool)),
+    #("score", json.int(result.score)),
+    #("outOf", json.int(result.out_of)),
+  ])
+}
+
+@external(javascript, "./app.ffi.mjs", "set_localstorage")
+fn set_localstorage(_key: String, _value: String) -> Nil {
+  Nil
+}
+
+fn date_format() {
+  tempo.format_local(tempo.Custom("YYYYMMDD"))
+}
+
+
 fn unanswered_questions(model: Model) {
   list.any(model.questions, fn(q) { q.selected == None })
 }
@@ -155,13 +182,13 @@ fn button(model: Model) {
 }
 
 fn result_panel(model: Model) {
-  let #(share_string, score, out_of) = calculate_results(model.questions)
+  let result = calculate_results(model.questions)
 
   html.div([
     attribute.class("border-2 border-zinc-600 rounded-lg p-4")
     ], [
-      html.div([], [html.text("You scored " <> int.to_string(score) <> " out of " <> int.to_string(out_of))]),
-      html.div([], [html.text(string.join(share_string, with: ""))])
+      html.div([], [html.text("You scored " <> int.to_string(result.score) <> " out of " <> int.to_string(result.out_of))]),
+      html.div([], [html.text(share_string(result.answers))])
     ]
   )
 }
@@ -169,14 +196,18 @@ fn result_panel(model: Model) {
 fn calculate_results(questions: List(Question)) {
   let score = list.count(questions, fn(q) { q.selected == Some(q.correct) })
   let out_of = list.length(questions)
-  let share_string = list.map(questions, fn(q) {
-    case q.selected == Some(q.correct) {
+  let answers = list.map(questions, fn(q) { q.selected == Some(q.correct) })
+  QuizResult(answers, score, out_of)
+}
+
+fn share_string(answers: List(Bool)) {
+  list.map(answers, fn(x) { 
+	  case x {
       False -> "❌"
       True -> "✔️"
-    }
-  })
-  #(share_string, score, out_of)
-}
+		}
+	}) |> string.join("")
+} 
 
 fn answer_radio(question: Question, answer: Answer, submitted: Bool) {
   case submitted, question.selected == Some(answer.pos), question.correct == answer.pos { 

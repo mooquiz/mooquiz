@@ -36,12 +36,12 @@ var List = class {
   // @internal
   countLength() {
     let current = this;
-    let length5 = 0;
+    let length4 = 0;
     while (current) {
       current = current.tail;
-      length5++;
+      length4++;
     }
-    return length5 - 1;
+    return length4 - 1;
   }
 };
 function prepend(element2, tail) {
@@ -421,8 +421,8 @@ function unwrap(option, default$) {
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/dict.mjs
-function insert(dict2, key2, value3) {
-  return map_insert(key2, value3, dict2);
+function insert(dict2, key, value3) {
+  return map_insert(key, value3, dict2);
 }
 function reverse_and_concat(loop$remaining, loop$accumulator) {
   while (true) {
@@ -445,10 +445,10 @@ function do_keys_loop(loop$list, loop$acc) {
     if (list2.hasLength(0)) {
       return reverse_and_concat(acc, toList([]));
     } else {
-      let key2 = list2.head[0];
+      let key = list2.head[0];
       let rest = list2.tail;
       loop$list = rest;
-      loop$acc = prepend(key2, acc);
+      loop$acc = prepend(key, acc);
     }
   }
 }
@@ -646,9 +646,9 @@ function key_find(keyword_list, desired_key) {
   return find_map(
     keyword_list,
     (keyword) => {
-      let key2 = keyword[0];
+      let key = keyword[0];
       let value3 = keyword[1];
-      let $ = isEqual(key2, desired_key);
+      let $ = isEqual(key, desired_key);
       if ($) {
         return new Ok(value3);
       } else {
@@ -656,110 +656,6 @@ function key_find(keyword_list, desired_key) {
       }
     }
   );
-}
-
-// build/dev/javascript/gleam_stdlib/gleam/string.mjs
-function replace(string4, pattern, substitute) {
-  let _pipe = string4;
-  let _pipe$1 = identity(_pipe);
-  let _pipe$2 = string_replace(_pipe$1, pattern, substitute);
-  return identity(_pipe$2);
-}
-function slice(string4, idx, len) {
-  let $ = len < 0;
-  if ($) {
-    return "";
-  } else {
-    let $1 = idx < 0;
-    if ($1) {
-      let translated_idx = string_length(string4) + idx;
-      let $2 = translated_idx < 0;
-      if ($2) {
-        return "";
-      } else {
-        return string_slice(string4, translated_idx, len);
-      }
-    } else {
-      return string_slice(string4, idx, len);
-    }
-  }
-}
-function concat2(strings) {
-  let _pipe = strings;
-  let _pipe$1 = concat(_pipe);
-  return identity(_pipe$1);
-}
-function repeat_loop(loop$string, loop$times, loop$acc) {
-  while (true) {
-    let string4 = loop$string;
-    let times = loop$times;
-    let acc = loop$acc;
-    let $ = times <= 0;
-    if ($) {
-      return acc;
-    } else {
-      loop$string = string4;
-      loop$times = times - 1;
-      loop$acc = acc + string4;
-    }
-  }
-}
-function repeat(string4, times) {
-  return repeat_loop(string4, times, "");
-}
-function padding(size, pad_string) {
-  let pad_string_length = string_length(pad_string);
-  let num_pads = divideInt(size, pad_string_length);
-  let extra = remainderInt(size, pad_string_length);
-  return repeat(pad_string, num_pads) + slice(pad_string, 0, extra);
-}
-function pad_start(string4, desired_length, pad_string) {
-  let current_length = string_length(string4);
-  let to_pad_length = desired_length - current_length;
-  let $ = to_pad_length <= 0;
-  if ($) {
-    return string4;
-  } else {
-    return padding(to_pad_length, pad_string) + string4;
-  }
-}
-function trim(string4) {
-  let _pipe = string4;
-  let _pipe$1 = trim_start(_pipe);
-  return trim_end(_pipe$1);
-}
-function drop_start(loop$string, loop$num_graphemes) {
-  while (true) {
-    let string4 = loop$string;
-    let num_graphemes = loop$num_graphemes;
-    let $ = num_graphemes > 0;
-    if (!$) {
-      return string4;
-    } else {
-      let $1 = pop_grapheme(string4);
-      if ($1.isOk()) {
-        let string$1 = $1[0][1];
-        loop$string = string$1;
-        loop$num_graphemes = num_graphemes - 1;
-      } else {
-        return string4;
-      }
-    }
-  }
-}
-function split2(x, substring) {
-  if (substring === "") {
-    return graphemes(x);
-  } else {
-    let _pipe = x;
-    let _pipe$1 = identity(_pipe);
-    let _pipe$2 = split(_pipe$1, substring);
-    return map(_pipe$2, identity);
-  }
-}
-function inspect2(term) {
-  let _pipe = inspect(term);
-  return identity(_pipe);
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/result.mjs
@@ -1091,17 +987,17 @@ function createNode(shift, key1, val1, key2hash, key2, val2) {
     addedLeaf
   );
 }
-function assoc(root, shift, hash, key2, val, addedLeaf) {
+function assoc(root, shift, hash, key, val, addedLeaf) {
   switch (root.type) {
     case ARRAY_NODE:
-      return assocArray(root, shift, hash, key2, val, addedLeaf);
+      return assocArray(root, shift, hash, key, val, addedLeaf);
     case INDEX_NODE:
-      return assocIndex(root, shift, hash, key2, val, addedLeaf);
+      return assocIndex(root, shift, hash, key, val, addedLeaf);
     case COLLISION_NODE:
-      return assocCollision(root, shift, hash, key2, val, addedLeaf);
+      return assocCollision(root, shift, hash, key, val, addedLeaf);
   }
 }
-function assocArray(root, shift, hash, key2, val, addedLeaf) {
+function assocArray(root, shift, hash, key, val, addedLeaf) {
   const idx = mask(hash, shift);
   const node = root.array[idx];
   if (node === void 0) {
@@ -1109,11 +1005,11 @@ function assocArray(root, shift, hash, key2, val, addedLeaf) {
     return {
       type: ARRAY_NODE,
       size: root.size + 1,
-      array: cloneAndSet(root.array, idx, { type: ENTRY, k: key2, v: val })
+      array: cloneAndSet(root.array, idx, { type: ENTRY, k: key, v: val })
     };
   }
   if (node.type === ENTRY) {
-    if (isEqual(key2, node.k)) {
+    if (isEqual(key, node.k)) {
       if (val === node.v) {
         return root;
       }
@@ -1122,7 +1018,7 @@ function assocArray(root, shift, hash, key2, val, addedLeaf) {
         size: root.size,
         array: cloneAndSet(root.array, idx, {
           type: ENTRY,
-          k: key2,
+          k: key,
           v: val
         })
       };
@@ -1134,11 +1030,11 @@ function assocArray(root, shift, hash, key2, val, addedLeaf) {
       array: cloneAndSet(
         root.array,
         idx,
-        createNode(shift + SHIFT, node.k, node.v, hash, key2, val)
+        createNode(shift + SHIFT, node.k, node.v, hash, key, val)
       )
     };
   }
-  const n = assoc(node, shift + SHIFT, hash, key2, val, addedLeaf);
+  const n = assoc(node, shift + SHIFT, hash, key, val, addedLeaf);
   if (n === node) {
     return root;
   }
@@ -1148,13 +1044,13 @@ function assocArray(root, shift, hash, key2, val, addedLeaf) {
     array: cloneAndSet(root.array, idx, n)
   };
 }
-function assocIndex(root, shift, hash, key2, val, addedLeaf) {
+function assocIndex(root, shift, hash, key, val, addedLeaf) {
   const bit = bitpos(hash, shift);
   const idx = index(root.bitmap, bit);
   if ((root.bitmap & bit) !== 0) {
     const node = root.array[idx];
     if (node.type !== ENTRY) {
-      const n = assoc(node, shift + SHIFT, hash, key2, val, addedLeaf);
+      const n = assoc(node, shift + SHIFT, hash, key, val, addedLeaf);
       if (n === node) {
         return root;
       }
@@ -1165,7 +1061,7 @@ function assocIndex(root, shift, hash, key2, val, addedLeaf) {
       };
     }
     const nodeKey = node.k;
-    if (isEqual(key2, nodeKey)) {
+    if (isEqual(key, nodeKey)) {
       if (val === node.v) {
         return root;
       }
@@ -1174,7 +1070,7 @@ function assocIndex(root, shift, hash, key2, val, addedLeaf) {
         bitmap: root.bitmap,
         array: cloneAndSet(root.array, idx, {
           type: ENTRY,
-          k: key2,
+          k: key,
           v: val
         })
       };
@@ -1186,7 +1082,7 @@ function assocIndex(root, shift, hash, key2, val, addedLeaf) {
       array: cloneAndSet(
         root.array,
         idx,
-        createNode(shift + SHIFT, nodeKey, node.v, hash, key2, val)
+        createNode(shift + SHIFT, nodeKey, node.v, hash, key, val)
       )
     };
   } else {
@@ -1194,7 +1090,7 @@ function assocIndex(root, shift, hash, key2, val, addedLeaf) {
     if (n >= MAX_INDEX_NODE) {
       const nodes = new Array(32);
       const jdx = mask(hash, shift);
-      nodes[jdx] = assocIndex(EMPTY, shift + SHIFT, hash, key2, val, addedLeaf);
+      nodes[jdx] = assocIndex(EMPTY, shift + SHIFT, hash, key, val, addedLeaf);
       let j = 0;
       let bitmap = root.bitmap;
       for (let i = 0; i < 32; i++) {
@@ -1212,7 +1108,7 @@ function assocIndex(root, shift, hash, key2, val, addedLeaf) {
     } else {
       const newArray = spliceIn(root.array, idx, {
         type: ENTRY,
-        k: key2,
+        k: key,
         v: val
       });
       addedLeaf.val = true;
@@ -1224,9 +1120,9 @@ function assocIndex(root, shift, hash, key2, val, addedLeaf) {
     }
   }
 }
-function assocCollision(root, shift, hash, key2, val, addedLeaf) {
+function assocCollision(root, shift, hash, key, val, addedLeaf) {
   if (hash === root.hash) {
-    const idx = collisionIndexOf(root, key2);
+    const idx = collisionIndexOf(root, key);
     if (idx !== -1) {
       const entry = root.array[idx];
       if (entry.v === val) {
@@ -1235,7 +1131,7 @@ function assocCollision(root, shift, hash, key2, val, addedLeaf) {
       return {
         type: COLLISION_NODE,
         hash,
-        array: cloneAndSet(root.array, idx, { type: ENTRY, k: key2, v: val })
+        array: cloneAndSet(root.array, idx, { type: ENTRY, k: key, v: val })
       };
     }
     const size = root.array.length;
@@ -1243,7 +1139,7 @@ function assocCollision(root, shift, hash, key2, val, addedLeaf) {
     return {
       type: COLLISION_NODE,
       hash,
-      array: cloneAndSet(root.array, size, { type: ENTRY, k: key2, v: val })
+      array: cloneAndSet(root.array, size, { type: ENTRY, k: key, v: val })
     };
   }
   return assoc(
@@ -1254,45 +1150,45 @@ function assocCollision(root, shift, hash, key2, val, addedLeaf) {
     },
     shift,
     hash,
-    key2,
+    key,
     val,
     addedLeaf
   );
 }
-function collisionIndexOf(root, key2) {
+function collisionIndexOf(root, key) {
   const size = root.array.length;
   for (let i = 0; i < size; i++) {
-    if (isEqual(key2, root.array[i].k)) {
+    if (isEqual(key, root.array[i].k)) {
       return i;
     }
   }
   return -1;
 }
-function find(root, shift, hash, key2) {
+function find(root, shift, hash, key) {
   switch (root.type) {
     case ARRAY_NODE:
-      return findArray(root, shift, hash, key2);
+      return findArray(root, shift, hash, key);
     case INDEX_NODE:
-      return findIndex(root, shift, hash, key2);
+      return findIndex(root, shift, hash, key);
     case COLLISION_NODE:
-      return findCollision(root, key2);
+      return findCollision(root, key);
   }
 }
-function findArray(root, shift, hash, key2) {
+function findArray(root, shift, hash, key) {
   const idx = mask(hash, shift);
   const node = root.array[idx];
   if (node === void 0) {
     return void 0;
   }
   if (node.type !== ENTRY) {
-    return find(node, shift + SHIFT, hash, key2);
+    return find(node, shift + SHIFT, hash, key);
   }
-  if (isEqual(key2, node.k)) {
+  if (isEqual(key, node.k)) {
     return node;
   }
   return void 0;
 }
-function findIndex(root, shift, hash, key2) {
+function findIndex(root, shift, hash, key) {
   const bit = bitpos(hash, shift);
   if ((root.bitmap & bit) === 0) {
     return void 0;
@@ -1300,31 +1196,31 @@ function findIndex(root, shift, hash, key2) {
   const idx = index(root.bitmap, bit);
   const node = root.array[idx];
   if (node.type !== ENTRY) {
-    return find(node, shift + SHIFT, hash, key2);
+    return find(node, shift + SHIFT, hash, key);
   }
-  if (isEqual(key2, node.k)) {
+  if (isEqual(key, node.k)) {
     return node;
   }
   return void 0;
 }
-function findCollision(root, key2) {
-  const idx = collisionIndexOf(root, key2);
+function findCollision(root, key) {
+  const idx = collisionIndexOf(root, key);
   if (idx < 0) {
     return void 0;
   }
   return root.array[idx];
 }
-function without(root, shift, hash, key2) {
+function without(root, shift, hash, key) {
   switch (root.type) {
     case ARRAY_NODE:
-      return withoutArray(root, shift, hash, key2);
+      return withoutArray(root, shift, hash, key);
     case INDEX_NODE:
-      return withoutIndex(root, shift, hash, key2);
+      return withoutIndex(root, shift, hash, key);
     case COLLISION_NODE:
-      return withoutCollision(root, key2);
+      return withoutCollision(root, key);
   }
 }
-function withoutArray(root, shift, hash, key2) {
+function withoutArray(root, shift, hash, key) {
   const idx = mask(hash, shift);
   const node = root.array[idx];
   if (node === void 0) {
@@ -1332,11 +1228,11 @@ function withoutArray(root, shift, hash, key2) {
   }
   let n = void 0;
   if (node.type === ENTRY) {
-    if (!isEqual(node.k, key2)) {
+    if (!isEqual(node.k, key)) {
       return root;
     }
   } else {
-    n = without(node, shift + SHIFT, hash, key2);
+    n = without(node, shift + SHIFT, hash, key);
     if (n === node) {
       return root;
     }
@@ -1385,7 +1281,7 @@ function withoutArray(root, shift, hash, key2) {
     array: cloneAndSet(root.array, idx, n)
   };
 }
-function withoutIndex(root, shift, hash, key2) {
+function withoutIndex(root, shift, hash, key) {
   const bit = bitpos(hash, shift);
   if ((root.bitmap & bit) === 0) {
     return root;
@@ -1393,7 +1289,7 @@ function withoutIndex(root, shift, hash, key2) {
   const idx = index(root.bitmap, bit);
   const node = root.array[idx];
   if (node.type !== ENTRY) {
-    const n = without(node, shift + SHIFT, hash, key2);
+    const n = without(node, shift + SHIFT, hash, key);
     if (n === node) {
       return root;
     }
@@ -1413,7 +1309,7 @@ function withoutIndex(root, shift, hash, key2) {
       array: spliceOut(root.array, idx)
     };
   }
-  if (isEqual(key2, node.k)) {
+  if (isEqual(key, node.k)) {
     if (root.bitmap === bit) {
       return void 0;
     }
@@ -1425,8 +1321,8 @@ function withoutIndex(root, shift, hash, key2) {
   }
   return root;
 }
-function withoutCollision(root, key2) {
-  const idx = collisionIndexOf(root, key2);
+function withoutCollision(root, key) {
+  const idx = collisionIndexOf(root, key);
   if (idx < 0) {
     return root;
   }
@@ -1501,11 +1397,11 @@ var Dict = class _Dict {
    * @param {NotFound} notFound
    * @returns {NotFound | V}
    */
-  get(key2, notFound) {
+  get(key, notFound) {
     if (this.root === void 0) {
       return notFound;
     }
-    const found = find(this.root, 0, getHash(key2), key2);
+    const found = find(this.root, 0, getHash(key), key);
     if (found === void 0) {
       return notFound;
     }
@@ -1516,10 +1412,10 @@ var Dict = class _Dict {
    * @param {V} val
    * @returns {Dict<K,V>}
    */
-  set(key2, val) {
+  set(key, val) {
     const addedLeaf = { val: false };
     const root = this.root === void 0 ? EMPTY : this.root;
-    const newRoot = assoc(root, 0, getHash(key2), key2, val, addedLeaf);
+    const newRoot = assoc(root, 0, getHash(key), key, val, addedLeaf);
     if (newRoot === this.root) {
       return this;
     }
@@ -1529,11 +1425,11 @@ var Dict = class _Dict {
    * @param {K} key
    * @returns {Dict<K,V>}
    */
-  delete(key2) {
+  delete(key) {
     if (this.root === void 0) {
       return this;
     }
-    const newRoot = without(this.root, 0, getHash(key2), key2);
+    const newRoot = without(this.root, 0, getHash(key), key);
     if (newRoot === this.root) {
       return this;
     }
@@ -1546,11 +1442,11 @@ var Dict = class _Dict {
    * @param {K} key
    * @returns {boolean}
    */
-  has(key2) {
+  has(key) {
     if (this.root === void 0) {
       return false;
     }
-    return find(this.root, 0, getHash(key2), key2) !== void 0;
+    return find(this.root, 0, getHash(key), key) !== void 0;
   }
   /**
    * @returns {[K,V][]}
@@ -1733,8 +1629,8 @@ function string_slice(string4, idx, len) {
     return string4.match(/./gsu).slice(idx, idx + len).join("");
   }
 }
-function string_codeunit_slice(str, from2, length5) {
-  return str.slice(from2, from2 + length5);
+function string_codeunit_slice(str, from2, length4) {
+  return str.slice(from2, from2 + length4);
 }
 function starts_with(haystack, needle) {
   return haystack.startsWith(needle);
@@ -1784,15 +1680,15 @@ function new_map() {
 function map_to_list(map6) {
   return List.fromArray(map6.entries());
 }
-function map_get(map6, key2) {
-  const value3 = map6.get(key2, NOT_FOUND);
+function map_get(map6, key) {
+  const value3 = map6.get(key, NOT_FOUND);
   if (value3 === NOT_FOUND) {
     return new Error(Nil);
   }
   return new Ok(value3);
 }
-function map_insert(key2, value3, map6) {
-  return map6.set(key2, value3);
+function map_insert(key, value3, map6) {
+  return map6.set(key, value3);
 }
 function classify_dynamic(data) {
   if (typeof data === "string") {
@@ -1919,9 +1815,9 @@ function inspectString(str) {
 function inspectDict(map6) {
   let body = "dict.from_list([";
   let first2 = true;
-  map6.forEach((value3, key2) => {
+  map6.forEach((value3, key) => {
     if (!first2) body = body + ", ";
-    body = body + "#(" + inspect(key2) + ", " + inspect(value3) + ")";
+    body = body + "#(" + inspect(key) + ", " + inspect(value3) + ")";
     first2 = false;
   });
   return body + "])";
@@ -1980,6 +1876,146 @@ function compare2(a, b) {
       return new Gt();
     }
   }
+}
+
+// build/dev/javascript/gleam_stdlib/gleam/string.mjs
+function replace(string4, pattern, substitute) {
+  let _pipe = string4;
+  let _pipe$1 = identity(_pipe);
+  let _pipe$2 = string_replace(_pipe$1, pattern, substitute);
+  return identity(_pipe$2);
+}
+function slice(string4, idx, len) {
+  let $ = len < 0;
+  if ($) {
+    return "";
+  } else {
+    let $1 = idx < 0;
+    if ($1) {
+      let translated_idx = string_length(string4) + idx;
+      let $2 = translated_idx < 0;
+      if ($2) {
+        return "";
+      } else {
+        return string_slice(string4, translated_idx, len);
+      }
+    } else {
+      return string_slice(string4, idx, len);
+    }
+  }
+}
+function concat2(strings) {
+  let _pipe = strings;
+  let _pipe$1 = concat(_pipe);
+  return identity(_pipe$1);
+}
+function repeat_loop(loop$string, loop$times, loop$acc) {
+  while (true) {
+    let string4 = loop$string;
+    let times = loop$times;
+    let acc = loop$acc;
+    let $ = times <= 0;
+    if ($) {
+      return acc;
+    } else {
+      loop$string = string4;
+      loop$times = times - 1;
+      loop$acc = acc + string4;
+    }
+  }
+}
+function repeat(string4, times) {
+  return repeat_loop(string4, times, "");
+}
+function padding(size, pad_string) {
+  let pad_string_length = string_length(pad_string);
+  let num_pads = divideInt(size, pad_string_length);
+  let extra = remainderInt(size, pad_string_length);
+  return repeat(pad_string, num_pads) + slice(pad_string, 0, extra);
+}
+function pad_start(string4, desired_length, pad_string) {
+  let current_length = string_length(string4);
+  let to_pad_length = desired_length - current_length;
+  let $ = to_pad_length <= 0;
+  if ($) {
+    return string4;
+  } else {
+    return padding(to_pad_length, pad_string) + string4;
+  }
+}
+function trim(string4) {
+  let _pipe = string4;
+  let _pipe$1 = trim_start(_pipe);
+  return trim_end(_pipe$1);
+}
+function drop_start(loop$string, loop$num_graphemes) {
+  while (true) {
+    let string4 = loop$string;
+    let num_graphemes = loop$num_graphemes;
+    let $ = num_graphemes > 0;
+    if (!$) {
+      return string4;
+    } else {
+      let $1 = pop_grapheme(string4);
+      if ($1.isOk()) {
+        let string$1 = $1[0][1];
+        loop$string = string$1;
+        loop$num_graphemes = num_graphemes - 1;
+      } else {
+        return string4;
+      }
+    }
+  }
+}
+function split2(x, substring) {
+  if (substring === "") {
+    return graphemes(x);
+  } else {
+    let _pipe = x;
+    let _pipe$1 = identity(_pipe);
+    let _pipe$2 = split(_pipe$1, substring);
+    return map(_pipe$2, identity);
+  }
+}
+function inspect2(term) {
+  let _pipe = inspect(term);
+  return identity(_pipe);
+}
+
+// build/dev/javascript/gleam_json/gleam_json_ffi.mjs
+function json_to_string(json) {
+  return JSON.stringify(json);
+}
+function object(entries) {
+  return Object.fromEntries(entries);
+}
+function identity2(x) {
+  return x;
+}
+function array(list2) {
+  return list2.toArray();
+}
+
+// build/dev/javascript/gleam_json/gleam/json.mjs
+function to_string2(json) {
+  return json_to_string(json);
+}
+function bool(input2) {
+  return identity2(input2);
+}
+function int2(input2) {
+  return identity2(input2);
+}
+function object2(entries) {
+  return object(entries);
+}
+function preprocessed_array(from2) {
+  return array(from2);
+}
+function array2(entries, inner_type) {
+  let _pipe = entries;
+  let _pipe$1 = map(_pipe, inner_type);
+  return preprocessed_array(_pipe$1);
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/io.mjs
@@ -3135,9 +3171,9 @@ var Text = class extends CustomType {
   }
 };
 var Element = class extends CustomType {
-  constructor(key2, namespace, tag, attrs, children2, self_closing, void$) {
+  constructor(key, namespace, tag, attrs, children2, self_closing, void$) {
     super();
-    this.key = key2;
+    this.key = key;
     this.namespace = namespace;
     this.tag = tag;
     this.attrs = attrs;
@@ -3177,12 +3213,12 @@ function attribute_to_event_handler(attribute2) {
     return new Ok([name$1, handler]);
   }
 }
-function do_element_list_handlers(elements2, handlers2, key2) {
+function do_element_list_handlers(elements2, handlers2, key) {
   return index_fold(
     elements2,
     handlers2,
     (handlers3, element2, index4) => {
-      let key$1 = key2 + "-" + to_string(index4);
+      let key$1 = key + "-" + to_string(index4);
       return do_handlers(element2, handlers3, key$1);
     }
   );
@@ -3191,14 +3227,14 @@ function do_handlers(loop$element, loop$handlers, loop$key) {
   while (true) {
     let element2 = loop$element;
     let handlers2 = loop$handlers;
-    let key2 = loop$key;
+    let key = loop$key;
     if (element2 instanceof Text) {
       return handlers2;
     } else if (element2 instanceof Map2) {
       let subtree = element2.subtree;
       loop$element = subtree();
       loop$handlers = handlers2;
-      loop$key = key2;
+      loop$key = key;
     } else {
       let attrs = element2.attrs;
       let children2 = element2.children;
@@ -3210,13 +3246,13 @@ function do_handlers(loop$element, loop$handlers, loop$key) {
           if ($.isOk()) {
             let name2 = $[0][0];
             let handler = $[0][1];
-            return insert(handlers3, key2 + "-" + name2, handler);
+            return insert(handlers3, key + "-" + name2, handler);
           } else {
             return handlers3;
           }
         }
       );
-      return do_element_list_handlers(children2, handlers$1, key2);
+      return do_element_list_handlers(children2, handlers$1, key);
     }
   }
 }
@@ -3611,8 +3647,8 @@ function getKeyedChildren(el) {
   const keyedChildren = /* @__PURE__ */ new Map();
   if (el) {
     for (const child of children(el)) {
-      const key2 = child?.key || child?.getAttribute?.("data-lustre-key");
-      if (key2) keyedChildren.set(key2, child);
+      const key = child?.key || child?.getAttribute?.("data-lustre-key");
+      if (key) keyedChildren.set(key, child);
     }
   }
   return keyedChildren;
@@ -4749,7 +4785,7 @@ function parse_scheme_loop(loop$original, loop$uri_string, loop$pieces, loop$siz
     }
   }
 }
-function to_string2(uri) {
+function to_string3(uri) {
   let parts = (() => {
     let $ = uri.fragment;
     if ($ instanceof Some) {
@@ -4966,8 +5002,8 @@ var Response = class extends CustomType {
     this.body = body;
   }
 };
-function get_header(response, key2) {
-  return key_find(response.headers, lowercase(key2));
+function get_header(response, key) {
+  return key_find(response.headers, lowercase(key));
 }
 
 // build/dev/javascript/gleam_javascript/gleam_javascript_ffi.mjs
@@ -5037,7 +5073,7 @@ function from_fetch_response(response) {
   );
 }
 function request_common(request) {
-  let url = to_string2(to_uri(request));
+  let url = to_string3(to_uri(request));
   let method = method_to_string(request.method).toUpperCase();
   let options = {
     headers: make_headers(request.headers),
@@ -5271,6 +5307,11 @@ function get(url, handler) {
   }
 }
 
+// build/dev/javascript/mooquiz/app.ffi.mjs
+function set_localstorage(key, json) {
+  window.localStorage.setItem(key, json);
+}
+
 // build/dev/javascript/mooquiz/mooquiz.mjs
 var Answer = class extends CustomType {
   constructor(pos, text3) {
@@ -5287,6 +5328,14 @@ var Question = class extends CustomType {
     this.answers = answers;
     this.correct = correct;
     this.selected = selected;
+  }
+};
+var QuizResult = class extends CustomType {
+  constructor(answers, score, out_of) {
+    super();
+    this.answers = answers;
+    this.score = score;
+    this.out_of = out_of;
   }
 };
 var SubmitAnswers = class extends CustomType {
@@ -5311,6 +5360,32 @@ var Model2 = class extends CustomType {
     this.questions = questions;
   }
 };
+function encode_result(result) {
+  return object2(
+    toList([
+      ["shareString", array2(result.answers, bool)],
+      ["score", int2(result.score)],
+      ["outOf", int2(result.out_of)]
+    ])
+  );
+}
+function date_format() {
+  return format_local(new Custom("YYYYMMDD"));
+}
+function save_results(result) {
+  return from(
+    (dispatch) => {
+      return set_localstorage(
+        date_format(),
+        (() => {
+          let _pipe = result;
+          let _pipe$1 = encode_result(_pipe);
+          return to_string2(_pipe$1);
+        })()
+      );
+    }
+  );
+}
 function unanswered_questions(model) {
   return any(
     model.questions,
@@ -5318,162 +5393,6 @@ function unanswered_questions(model) {
       return isEqual(q.selected, new None());
     }
   );
-}
-function update(model, msg) {
-  let model$1 = (() => {
-    if (msg instanceof GotQuestions && msg[0].isOk()) {
-      let file = msg[0][0];
-      debug("Pulled Questions");
-      let $ = (() => {
-        let _pipe = file;
-        let _pipe$1 = trim(_pipe);
-        return split2(_pipe$1, "\n\n");
-      })();
-      if (!$.atLeastLength(1)) {
-        throw makeError(
-          "let_assert",
-          "mooquiz",
-          59,
-          "update",
-          "Pattern match failed, no pattern matched the value.",
-          { value: $ }
-        );
-      }
-      let title = $.head;
-      let questions = $.tail;
-      let questions$1 = map(
-        questions,
-        (q) => {
-          let $1 = split2(q, "\n");
-          if (!$1.atLeastLength(2)) {
-            throw makeError(
-              "let_assert",
-              "mooquiz",
-              61,
-              "",
-              "Pattern match failed, no pattern matched the value.",
-              { value: $1 }
-            );
-          }
-          let question_text = $1.head;
-          let correct = $1.tail.head;
-          let answers = $1.tail.tail;
-          let answers$1 = (() => {
-            let _pipe = answers;
-            let _pipe$1 = length(_pipe);
-            let _pipe$2 = range(_pipe$1, 1);
-            let _pipe$3 = reverse(_pipe$2);
-            let _pipe$4 = zip(_pipe$3, answers);
-            return map(
-              _pipe$4,
-              (a) => {
-                let id = a[0];
-                let text3 = a[1];
-                return new Answer(id, text3);
-              }
-            );
-          })();
-          return [question_text, correct, answers$1];
-        }
-      );
-      let questions$2 = (() => {
-        let _pipe = questions$1;
-        let _pipe$1 = length(_pipe);
-        let _pipe$2 = range(_pipe$1, 1);
-        let _pipe$3 = reverse(_pipe$2);
-        let _pipe$4 = zip(_pipe$3, questions$1);
-        return map(
-          _pipe$4,
-          (q) => {
-            let id = q[0];
-            let question_text = q[1][0];
-            let correct = q[1][1];
-            let answers = q[1][2];
-            return new Question(
-              id,
-              question_text,
-              answers,
-              (() => {
-                let $1 = parse_int(correct);
-                if ($1.isOk()) {
-                  let correct$1 = $1[0];
-                  return correct$1;
-                } else {
-                  return 0;
-                }
-              })(),
-              new None()
-            );
-          }
-        );
-      })();
-      return [new Model2(title, false, questions$2), none()];
-    } else if (msg instanceof GotQuestions && !msg[0].isOk()) {
-      debug("Pulling failed");
-      return [model, none()];
-    } else if (msg instanceof SubmitAnswers) {
-      let $ = unanswered_questions(model);
-      if ($) {
-        return [model, none()];
-      } else {
-        debug("Submitted Answers");
-        return [
-          (() => {
-            let _record = model;
-            return new Model2(_record.title, true, _record.questions);
-          })(),
-          none()
-        ];
-      }
-    } else {
-      let value3 = msg[0];
-      let $ = split2(value3, "-");
-      if ($.hasLength(2)) {
-        let question_id = $.head;
-        let answer = $.tail.head;
-        let $1 = parse_int(question_id);
-        if ($1.isOk()) {
-          let qpos = $1[0];
-          let questions = map(
-            model.questions,
-            (question) => {
-              let $2 = qpos === question.id;
-              if (!$2) {
-                return question;
-              } else {
-                let $3 = parse_int(answer);
-                if ($3.isOk()) {
-                  let apos = $3[0];
-                  let _record = question;
-                  return new Question(
-                    _record.id,
-                    _record.text,
-                    _record.answers,
-                    _record.correct,
-                    new Some(apos)
-                  );
-                } else {
-                  return question;
-                }
-              }
-            }
-          );
-          return [
-            (() => {
-              let _record = model;
-              return new Model2(_record.title, _record.submitted, questions);
-            })(),
-            none()
-          ];
-        } else {
-          return [model, none()];
-        }
-      } else {
-        return [model, none()];
-      }
-    }
-  })();
-  return model$1;
 }
 function calculate_results(questions) {
   let score = count(
@@ -5483,24 +5402,182 @@ function calculate_results(questions) {
     }
   );
   let out_of = length(questions);
-  let share_string = map(
+  let answers = map(
     questions,
     (q) => {
-      let $ = isEqual(q.selected, new Some(q.correct));
-      if (!$) {
+      return isEqual(q.selected, new Some(q.correct));
+    }
+  );
+  return new QuizResult(answers, score, out_of);
+}
+function update(model, msg) {
+  if (msg instanceof GotQuestions && msg[0].isOk()) {
+    let file = msg[0][0];
+    debug("Pulled Questions");
+    let $ = (() => {
+      let _pipe = file;
+      let _pipe$1 = trim(_pipe);
+      return split2(_pipe$1, "\n\n");
+    })();
+    if (!$.atLeastLength(1)) {
+      throw makeError(
+        "let_assert",
+        "mooquiz",
+        62,
+        "update",
+        "Pattern match failed, no pattern matched the value.",
+        { value: $ }
+      );
+    }
+    let title = $.head;
+    let questions = $.tail;
+    let questions$1 = map(
+      questions,
+      (q) => {
+        let $1 = split2(q, "\n");
+        if (!$1.atLeastLength(2)) {
+          throw makeError(
+            "let_assert",
+            "mooquiz",
+            64,
+            "",
+            "Pattern match failed, no pattern matched the value.",
+            { value: $1 }
+          );
+        }
+        let question_text = $1.head;
+        let correct = $1.tail.head;
+        let answers = $1.tail.tail;
+        let answers$1 = (() => {
+          let _pipe = answers;
+          let _pipe$1 = length(_pipe);
+          let _pipe$2 = range(_pipe$1, 1);
+          let _pipe$3 = reverse(_pipe$2);
+          let _pipe$4 = zip(_pipe$3, answers);
+          return map(
+            _pipe$4,
+            (a) => {
+              let id = a[0];
+              let text3 = a[1];
+              return new Answer(id, text3);
+            }
+          );
+        })();
+        return [question_text, correct, answers$1];
+      }
+    );
+    let questions$2 = (() => {
+      let _pipe = questions$1;
+      let _pipe$1 = length(_pipe);
+      let _pipe$2 = range(_pipe$1, 1);
+      let _pipe$3 = reverse(_pipe$2);
+      let _pipe$4 = zip(_pipe$3, questions$1);
+      return map(
+        _pipe$4,
+        (q) => {
+          let id = q[0];
+          let question_text = q[1][0];
+          let correct = q[1][1];
+          let answers = q[1][2];
+          return new Question(
+            id,
+            question_text,
+            answers,
+            (() => {
+              let $1 = parse_int(correct);
+              if ($1.isOk()) {
+                let correct$1 = $1[0];
+                return correct$1;
+              } else {
+                return 0;
+              }
+            })(),
+            new None()
+          );
+        }
+      );
+    })();
+    return [new Model2(title, false, questions$2), none()];
+  } else if (msg instanceof GotQuestions && !msg[0].isOk()) {
+    debug("Pulling failed");
+    return [model, none()];
+  } else if (msg instanceof SubmitAnswers) {
+    let $ = unanswered_questions(model);
+    if ($) {
+      return [model, none()];
+    } else {
+      debug("Submitted Answers");
+      return [
+        (() => {
+          let _record = model;
+          return new Model2(_record.title, true, _record.questions);
+        })(),
+        save_results(calculate_results(model.questions))
+      ];
+    }
+  } else {
+    let value3 = msg[0];
+    let $ = split2(value3, "-");
+    if ($.hasLength(2)) {
+      let question_id = $.head;
+      let answer = $.tail.head;
+      let $1 = parse_int(question_id);
+      if ($1.isOk()) {
+        let qpos = $1[0];
+        let questions = map(
+          model.questions,
+          (question) => {
+            let $2 = qpos === question.id;
+            if (!$2) {
+              return question;
+            } else {
+              let $3 = parse_int(answer);
+              if ($3.isOk()) {
+                let apos = $3[0];
+                let _record = question;
+                return new Question(
+                  _record.id,
+                  _record.text,
+                  _record.answers,
+                  _record.correct,
+                  new Some(apos)
+                );
+              } else {
+                return question;
+              }
+            }
+          }
+        );
+        return [
+          (() => {
+            let _record = model;
+            return new Model2(_record.title, _record.submitted, questions);
+          })(),
+          none()
+        ];
+      } else {
+        return [model, none()];
+      }
+    } else {
+      return [model, none()];
+    }
+  }
+}
+function share_string(answers) {
+  let _pipe = map(
+    answers,
+    (x) => {
+      if (!x) {
         return "\u274C";
       } else {
         return "\u2714\uFE0F";
       }
     }
   );
-  return [share_string, score, out_of];
+  return join(_pipe, "");
 }
 function result_panel(model) {
-  let $ = calculate_results(model.questions);
-  let share_string = $[0];
-  let score = $[1];
-  let out_of = $[2];
+  let result = calculate_results(model.questions);
   return div(
     toList([class$("border-2 border-zinc-600 rounded-lg p-4")]),
     toList([
@@ -5508,16 +5585,13 @@ function result_panel(model) {
         toList([]),
         toList([
           text2(
-            "You scored " + to_string(score) + " out of " + to_string(
-              out_of
+            "You scored " + to_string(result.score) + " out of " + to_string(
+              result.out_of
             )
           )
         ])
       ),
-      div(
-        toList([]),
-        toList([text2(join(share_string, ""))])
-      )
+      div(toList([]), toList([text2(share_string(result.answers))]))
     ])
   );
 }
@@ -5642,9 +5716,7 @@ function view(model) {
 var questions_dir_url = "https://raw.githubusercontent.com/mooquiz/Questions/refs/heads/main/";
 function init2(_) {
   let model = new Model2("Loading", false, toList([]));
-  let questions_url = questions_dir_url + format_local(
-    new Custom("YYYYMMDD")
-  ) + ".txt";
+  let questions_url = questions_dir_url + date_format() + ".txt";
   return [
     model,
     get(
@@ -5662,7 +5734,7 @@ function main2() {
     throw makeError(
       "let_assert",
       "mooquiz",
-      38,
+      41,
       "main",
       "Pattern match failed, no pattern matched the value.",
       { value: $ }
