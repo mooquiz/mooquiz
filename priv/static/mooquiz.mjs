@@ -6008,7 +6008,7 @@ function calculate_results(questions) {
         throw makeError(
           "panic",
           "mooquiz",
-          248,
+          249,
           "",
           "Unfilled scored should never have been saved",
           {}
@@ -6283,7 +6283,8 @@ function result_panel(model) {
       toList([
         class$(
           "fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50"
-        )
+        ),
+        on_click(new ToggleResultPanel())
       ]),
       toList([
         div(
