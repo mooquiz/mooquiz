@@ -11,7 +11,7 @@ export function get_localstorage(key) {
   if (json === null) return new Error(undefined);
 
   try {
-    return new Ok(JSON.parse(json));
+    return new Ok(json);
   } catch {
     return new Error(undefined);
   }

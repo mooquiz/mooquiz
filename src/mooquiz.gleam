@@ -6,10 +6,10 @@ import lustre/attribute
 import tempo
 import gleam/option.{type Option, Some, None}
 import gleam/string
+import gleam/dynamic/decode
 import gleam/json
 import gleam/list
 import gleam/int
-import gleam/io
 import rsvp
 
 const questions_dir_url = "https://raw.githubusercontent.com/mooquiz/Questions/refs/heads/main/"
@@ -23,7 +23,7 @@ type Question {
 }
 
 type QuizResult {
-  QuizResult(answers: List(Bool), score: Int, out_of: Int)
+  QuizResult(results: List(Bool), answers: List(Int), score: Int, out_of: Int)
 }
 
 type Msg {
@@ -58,12 +58,27 @@ fn init(_flags) -> #(Model, effect.Effect(Msg)) {
 
 fn update(model: Model, msg: Msg){
   case msg {
-	  ReadAnswers(answers) -> {
-		  io.debug(answers)
-		  #(model, effect.none())
+	  ReadAnswers(answers) -> { 
+			let result_decoder = {
+				use answers <- decode.field("answers", decode.list(decode.int))
+			  use results <- decode.field("results", decode.list(decode.bool))
+				use score <- decode.field("score", decode.int)
+				use out_of <- decode.field("outOf", decode.int)
+				decode.success(QuizResult(results:, answers:, score:, out_of:))
+			}
+      case json.parse(answers, result_decoder) {
+			  Error(_) -> #(model, effect.none())
+			  Ok(attempt) -> {
+				  let questions = attempt.answers
+					|> list.zip(model.questions)
+					|> list.map(fn(x) { 
+					  Question(..x.1, selected: Some(x.0))
+					})
+					#(Model(..model, questions: questions, submitted: True), effect.none())
+				}
+			}
 		}
     GotQuestions(Ok(file)) -> {
-      io.debug("Pulled Questions")
       let assert [title, ..questions] = file |> string.trim |> string.split("\n\n")
       let questions = list.map(questions, fn (q) {
         let assert [question_text, correct, ..answers] = string.split(q, "\n")
@@ -103,17 +118,11 @@ fn update(model: Model, msg: Msg){
 
       #(Model(title, False, questions), get_today())
     }
-    GotQuestions(Error(_)) -> {
-      io.debug("Pulling failed")
-      #(model, effect.none())
-    }
+    GotQuestions(Error(_)) -> #(model, effect.none())
     SubmitAnswers -> { 
       case unanswered_questions(model) {
         True -> #(model, effect.none())
-        False -> {
-          io.debug("Submitted Answers")
-          #(Model(..model, submitted: True), save_results(calculate_results(model.questions)))
-        }
+        False -> #(Model(..model, submitted: True), save_results(calculate_results(model.questions)))
       }
     }
     SelectAnswer(value) -> {
@@ -149,24 +158,21 @@ fn save_results(result: QuizResult) {
 
 fn get_today() {
   effect.from(fn(dispatch) {
-		echo "Getting today's attempt"
 	  case get_localstorage(date_format()) {
 		  Ok(result) -> { 
 			  echo result
 				dispatch(ReadAnswers(result))
 				Nil
 			}
-			Error(_) -> {
-			  echo "Fuck"
-				Nil
-			}
+			Error(_) -> Nil
 		}
 	})
 }
 
 fn encode_result(result: QuizResult) -> json.Json {
   json.object([
-    #("shareString", json.array(result.answers, of: json.bool)),
+    #("results", json.array(result.results, of: json.bool)),
+    #("answers", json.array(result.answers, of: json.int)),
     #("score", json.int(result.score)),
     #("outOf", json.int(result.out_of)),
   ])
@@ -203,7 +209,7 @@ fn button(model: Model) {
         attribute.class("duration-200 border border-zinc-600 p-2 rounded-md " <> classes)
       ], [html.text("Submit")])
     }
-    True -> { result_panel(model) }
+    True -> result_panel(model)
   }
 }
 
@@ -214,20 +220,26 @@ fn result_panel(model: Model) {
     attribute.class("border-2 border-zinc-600 rounded-lg p-4")
     ], [
       html.div([], [html.text("You scored " <> int.to_string(result.score) <> " out of " <> int.to_string(result.out_of))]),
-      html.div([], [html.text(share_string(result.answers))])
+      html.div([], [html.text(share_string(result.results))])
     ]
   )
 }
 
 fn calculate_results(questions: List(Question)) {
-  let score = list.count(questions, fn(q) { q.selected == Some(q.correct) })
   let out_of = list.length(questions)
-  let answers = list.map(questions, fn(q) { q.selected == Some(q.correct) })
-  QuizResult(answers, score, out_of)
+	let answers = list.map(questions, fn(q) { 
+	  case q.selected {
+		  Some(answer) -> answer
+			None -> panic as "Unfilled scored should never have been saved"
+		}
+	})
+  let results = list.map(questions, fn(q) { q.selected == Some(q.correct) })
+  let score = list.count(questions, fn(q) { q.selected == Some(q.correct) })
+  QuizResult(results: results, answers: answers, score: score, out_of: out_of)
 }
 
-fn share_string(answers: List(Bool)) {
-  list.map(answers, fn(x) { 
+fn share_string(results: List(Bool)) {
+  list.map(results, fn(x) { 
 	  case x {
       False -> "❌"
       True -> "✔️"

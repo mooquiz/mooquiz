@@ -156,11 +156,11 @@ var BitArray = class {
    * @param {number} index
    * @returns {number | undefined}
    */
-  byteAt(index4) {
-    if (index4 < 0 || index4 >= this.byteSize) {
+  byteAt(index5) {
+    if (index5 < 0 || index5 >= this.byteSize) {
       return void 0;
     }
-    return bitArrayByteAt(this.rawBuffer, this.bitOffset, index4);
+    return bitArrayByteAt(this.rawBuffer, this.bitOffset, index5);
   }
   /** @internal */
   equals(other) {
@@ -248,12 +248,12 @@ var BitArray = class {
     return this.rawBuffer.length;
   }
 };
-function bitArrayByteAt(buffer, bitOffset, index4) {
+function bitArrayByteAt(buffer, bitOffset, index5) {
   if (bitOffset === 0) {
-    return buffer[index4] ?? 0;
+    return buffer[index5] ?? 0;
   } else {
-    const a = buffer[index4] << bitOffset & 255;
-    const b = buffer[index4 + 1] >> 8 - bitOffset;
+    const a = buffer[index5] << bitOffset & 255;
+    const b = buffer[index5 + 1] >> 8 - bitOffset;
     return a | b;
   }
 }
@@ -711,13 +711,13 @@ function reverse_and_concat(loop$remaining, loop$accumulator) {
 }
 function do_keys_loop(loop$list, loop$acc) {
   while (true) {
-    let list2 = loop$list;
+    let list3 = loop$list;
     let acc = loop$acc;
-    if (list2.hasLength(0)) {
+    if (list3.hasLength(0)) {
       return reverse_and_concat(acc, toList([]));
     } else {
-      let key = list2.head[0];
-      let rest = list2.tail;
+      let key = list3.head[0];
+      let rest = list3.tail;
       loop$list = rest;
       loop$acc = prepend(key, acc);
     }
@@ -730,10 +730,10 @@ function keys(dict2) {
 // build/dev/javascript/gleam_stdlib/gleam/list.mjs
 function length_loop(loop$list, loop$count) {
   while (true) {
-    let list2 = loop$list;
+    let list3 = loop$list;
     let count2 = loop$count;
-    if (list2.atLeastLength(1)) {
-      let list$1 = list2.tail;
+    if (list3.atLeastLength(1)) {
+      let list$1 = list3.tail;
       loop$list = list$1;
       loop$count = count2 + 1;
     } else {
@@ -741,8 +741,8 @@ function length_loop(loop$list, loop$count) {
     }
   }
 }
-function length(list2) {
-  return length_loop(list2, 0);
+function length(list3) {
+  return length_loop(list3, 0);
 }
 function reverse_and_prepend(loop$prefix, loop$suffix) {
   while (true) {
@@ -758,47 +758,64 @@ function reverse_and_prepend(loop$prefix, loop$suffix) {
     }
   }
 }
-function reverse(list2) {
-  return reverse_and_prepend(list2, toList([]));
+function reverse(list3) {
+  return reverse_and_prepend(list3, toList([]));
 }
 function map_loop(loop$list, loop$fun, loop$acc) {
   while (true) {
-    let list2 = loop$list;
+    let list3 = loop$list;
     let fun = loop$fun;
     let acc = loop$acc;
-    if (list2.hasLength(0)) {
+    if (list3.hasLength(0)) {
       return reverse(acc);
     } else {
-      let first$1 = list2.head;
-      let rest$1 = list2.tail;
+      let first$1 = list3.head;
+      let rest$1 = list3.tail;
       loop$list = rest$1;
       loop$fun = fun;
       loop$acc = prepend(fun(first$1), acc);
     }
   }
 }
-function map(list2, fun) {
-  return map_loop(list2, fun, toList([]));
+function map(list3, fun) {
+  return map_loop(list3, fun, toList([]));
+}
+function append_loop(loop$first, loop$second) {
+  while (true) {
+    let first2 = loop$first;
+    let second = loop$second;
+    if (first2.hasLength(0)) {
+      return second;
+    } else {
+      let first$1 = first2.head;
+      let rest$1 = first2.tail;
+      loop$first = rest$1;
+      loop$second = prepend(first$1, second);
+    }
+  }
+}
+function append(first2, second) {
+  return append_loop(reverse(first2), second);
 }
 function fold(loop$list, loop$initial, loop$fun) {
   while (true) {
-    let list2 = loop$list;
+    let list3 = loop$list;
     let initial = loop$initial;
     let fun = loop$fun;
-    if (list2.hasLength(0)) {
+    if (list3.hasLength(0)) {
       return initial;
     } else {
-      let first$1 = list2.head;
-      let rest$1 = list2.tail;
+      let first$1 = list3.head;
+      let rest$1 = list3.tail;
       loop$list = rest$1;
       loop$initial = fun(initial, first$1);
       loop$fun = fun;
     }
   }
 }
-function count(list2, predicate) {
+function count(list3, predicate) {
   return fold(
-    list2,
+    list3,
     0,
     (acc, value3) => {
       let $ = predicate(value3);
@@ -815,31 +832,31 @@ function index_fold_loop(loop$over, loop$acc, loop$with, loop$index) {
     let over = loop$over;
     let acc = loop$acc;
     let with$ = loop$with;
-    let index4 = loop$index;
+    let index5 = loop$index;
     if (over.hasLength(0)) {
       return acc;
     } else {
       let first$1 = over.head;
       let rest$1 = over.tail;
       loop$over = rest$1;
-      loop$acc = with$(acc, first$1, index4);
+      loop$acc = with$(acc, first$1, index5);
       loop$with = with$;
-      loop$index = index4 + 1;
+      loop$index = index5 + 1;
     }
   }
 }
-function index_fold(list2, initial, fun) {
-  return index_fold_loop(list2, initial, fun, 0);
+function index_fold(list3, initial, fun) {
+  return index_fold_loop(list3, initial, fun, 0);
 }
 function find_map(loop$list, loop$fun) {
   while (true) {
-    let list2 = loop$list;
+    let list3 = loop$list;
     let fun = loop$fun;
-    if (list2.hasLength(0)) {
+    if (list3.hasLength(0)) {
       return new Error(void 0);
     } else {
-      let first$1 = list2.head;
-      let rest$1 = list2.tail;
+      let first$1 = list3.head;
+      let rest$1 = list3.tail;
       let $ = fun(first$1);
       if ($.isOk()) {
         let first$2 = $[0];
@@ -853,13 +870,13 @@ function find_map(loop$list, loop$fun) {
 }
 function any(loop$list, loop$predicate) {
   while (true) {
-    let list2 = loop$list;
+    let list3 = loop$list;
     let predicate = loop$predicate;
-    if (list2.hasLength(0)) {
+    if (list3.hasLength(0)) {
       return false;
     } else {
-      let first$1 = list2.head;
-      let rest$1 = list2.tail;
+      let first$1 = list3.head;
+      let rest$1 = list3.tail;
       let $ = predicate(first$1);
       if ($) {
         return true;
@@ -888,8 +905,8 @@ function zip_loop(loop$one, loop$other, loop$acc) {
     }
   }
 }
-function zip(list2, other) {
-  return zip_loop(list2, other, toList([]));
+function zip(list3, other) {
+  return zip_loop(list3, other, toList([]));
 }
 function range_loop(loop$start, loop$stop, loop$acc) {
   while (true) {
@@ -1785,34 +1802,21 @@ function parse_int(value3) {
 function to_string(term) {
   return term.toString();
 }
-function float_to_string(float4) {
-  const string4 = float4.toString().replace("+", "");
-  if (string4.indexOf(".") >= 0) {
-    return string4;
-  } else {
-    const index4 = string4.indexOf("e");
-    if (index4 >= 0) {
-      return string4.slice(0, index4) + ".0" + string4.slice(index4);
-    } else {
-      return string4 + ".0";
-    }
+function string_replace(string5, target, substitute) {
+  if (typeof string5.replaceAll !== "undefined") {
+    return string5.replaceAll(target, substitute);
   }
-}
-function string_replace(string4, target, substitute) {
-  if (typeof string4.replaceAll !== "undefined") {
-    return string4.replaceAll(target, substitute);
-  }
-  return string4.replace(
+  return string5.replace(
     // $& means the whole matched string
     new RegExp(target.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"),
     substitute
   );
 }
-function string_length(string4) {
-  if (string4 === "") {
+function string_length(string5) {
+  if (string5 === "") {
     return 0;
   }
-  const iterator = graphemes_iterator(string4);
+  const iterator = graphemes_iterator(string5);
   if (iterator) {
     let i = 0;
     for (const _ of iterator) {
@@ -1820,34 +1824,34 @@ function string_length(string4) {
     }
     return i;
   } else {
-    return string4.match(/./gsu).length;
+    return string5.match(/./gsu).length;
   }
 }
-function graphemes(string4) {
-  const iterator = graphemes_iterator(string4);
+function graphemes(string5) {
+  const iterator = graphemes_iterator(string5);
   if (iterator) {
     return List.fromArray(Array.from(iterator).map((item) => item.segment));
   } else {
-    return List.fromArray(string4.match(/./gsu));
+    return List.fromArray(string5.match(/./gsu));
   }
 }
 var segmenter = void 0;
-function graphemes_iterator(string4) {
+function graphemes_iterator(string5) {
   if (globalThis.Intl && Intl.Segmenter) {
     segmenter ||= new Intl.Segmenter();
-    return segmenter.segment(string4)[Symbol.iterator]();
+    return segmenter.segment(string5)[Symbol.iterator]();
   }
 }
-function pop_grapheme(string4) {
+function pop_grapheme(string5) {
   let first2;
-  const iterator = graphemes_iterator(string4);
+  const iterator = graphemes_iterator(string5);
   if (iterator) {
     first2 = iterator.next().value?.segment;
   } else {
-    first2 = string4.match(/./su)?.[0];
+    first2 = string5.match(/./su)?.[0];
   }
   if (first2) {
-    return new Ok([first2, string4.slice(first2.length)]);
+    return new Ok([first2, string5.slice(first2.length)]);
   } else {
     return new Error(Nil);
   }
@@ -1855,8 +1859,8 @@ function pop_grapheme(string4) {
 function pop_codeunit(str) {
   return [str.charCodeAt(0) | 0, str.slice(1)];
 }
-function lowercase(string4) {
-  return string4.toLowerCase();
+function lowercase(string5) {
+  return string5.toLowerCase();
 }
 function split(xs, pattern) {
   return List.fromArray(xs.split(pattern));
@@ -1878,11 +1882,11 @@ function concat(xs) {
   }
   return result;
 }
-function string_slice(string4, idx, len) {
-  if (len <= 0 || idx >= string4.length) {
+function string_slice(string5, idx, len) {
+  if (len <= 0 || idx >= string5.length) {
     return "";
   }
-  const iterator = graphemes_iterator(string4);
+  const iterator = graphemes_iterator(string5);
   if (iterator) {
     while (idx-- > 0) {
       iterator.next();
@@ -1897,7 +1901,7 @@ function string_slice(string4, idx, len) {
     }
     return result;
   } else {
-    return string4.match(/./gsu).slice(idx, idx + len).join("");
+    return string5.match(/./gsu).slice(idx, idx + len).join("");
   }
 }
 function string_codeunit_slice(str, from2, length4) {
@@ -1930,36 +1934,27 @@ var trim_start_regex = /* @__PURE__ */ new RegExp(
   `^[${unicode_whitespaces}]*`
 );
 var trim_end_regex = /* @__PURE__ */ new RegExp(`[${unicode_whitespaces}]*$`);
-function trim_start(string4) {
-  return string4.replace(trim_start_regex, "");
+function trim_start(string5) {
+  return string5.replace(trim_start_regex, "");
 }
-function trim_end(string4) {
-  return string4.replace(trim_end_regex, "");
-}
-function print_debug(string4) {
-  if (typeof process === "object" && process.stderr?.write) {
-    process.stderr.write(string4 + "\n");
-  } else if (typeof Deno === "object") {
-    Deno.stderr.writeSync(new TextEncoder().encode(string4 + "\n"));
-  } else {
-    console.log(string4);
-  }
+function trim_end(string5) {
+  return string5.replace(trim_end_regex, "");
 }
 function new_map() {
   return Dict.new();
 }
-function map_to_list(map6) {
-  return List.fromArray(map6.entries());
+function map_to_list(map7) {
+  return List.fromArray(map7.entries());
 }
-function map_get(map6, key) {
-  const value3 = map6.get(key, NOT_FOUND);
+function map_get(map7, key) {
+  const value3 = map7.get(key, NOT_FOUND);
   if (value3 === NOT_FOUND) {
     return new Error(Nil);
   }
   return new Ok(value3);
 }
-function map_insert(key, value3, map6) {
-  return map6.set(key, value3);
+function map_insert(key, value3, map7) {
+  return map7.set(key, value3);
 }
 function classify_dynamic(data) {
   if (typeof data === "string") {
@@ -2016,122 +2011,12 @@ function decode_field(value3, name2) {
     return try_get_field(value3, name2, not_a_map_error);
   }
 }
-function try_get_field(value3, field2, or_else) {
+function try_get_field(value3, field3, or_else) {
   try {
-    return field2 in value3 ? new Ok(new Some(value3[field2])) : or_else();
+    return field3 in value3 ? new Ok(new Some(value3[field3])) : or_else();
   } catch {
     return or_else();
   }
-}
-function inspect(v) {
-  const t = typeof v;
-  if (v === true) return "True";
-  if (v === false) return "False";
-  if (v === null) return "//js(null)";
-  if (v === void 0) return "Nil";
-  if (t === "string") return inspectString(v);
-  if (t === "bigint" || Number.isInteger(v)) return v.toString();
-  if (t === "number") return float_to_string(v);
-  if (Array.isArray(v)) return `#(${v.map(inspect).join(", ")})`;
-  if (v instanceof List) return inspectList(v);
-  if (v instanceof UtfCodepoint) return inspectUtfCodepoint(v);
-  if (v instanceof BitArray) return `<<${bit_array_inspect(v, "")}>>`;
-  if (v instanceof CustomType) return inspectCustomType(v);
-  if (v instanceof Dict) return inspectDict(v);
-  if (v instanceof Set) return `//js(Set(${[...v].map(inspect).join(", ")}))`;
-  if (v instanceof RegExp) return `//js(${v})`;
-  if (v instanceof Date) return `//js(Date("${v.toISOString()}"))`;
-  if (v instanceof Function) {
-    const args = [];
-    for (const i of Array(v.length).keys())
-      args.push(String.fromCharCode(i + 97));
-    return `//fn(${args.join(", ")}) { ... }`;
-  }
-  return inspectObject(v);
-}
-function inspectString(str) {
-  let new_str = '"';
-  for (let i = 0; i < str.length; i++) {
-    const char = str[i];
-    switch (char) {
-      case "\n":
-        new_str += "\\n";
-        break;
-      case "\r":
-        new_str += "\\r";
-        break;
-      case "	":
-        new_str += "\\t";
-        break;
-      case "\f":
-        new_str += "\\f";
-        break;
-      case "\\":
-        new_str += "\\\\";
-        break;
-      case '"':
-        new_str += '\\"';
-        break;
-      default:
-        if (char < " " || char > "~" && char < "\xA0") {
-          new_str += "\\u{" + char.charCodeAt(0).toString(16).toUpperCase().padStart(4, "0") + "}";
-        } else {
-          new_str += char;
-        }
-    }
-  }
-  new_str += '"';
-  return new_str;
-}
-function inspectDict(map6) {
-  let body = "dict.from_list([";
-  let first2 = true;
-  map6.forEach((value3, key) => {
-    if (!first2) body = body + ", ";
-    body = body + "#(" + inspect(key) + ", " + inspect(value3) + ")";
-    first2 = false;
-  });
-  return body + "])";
-}
-function inspectObject(v) {
-  const name2 = Object.getPrototypeOf(v)?.constructor?.name || "Object";
-  const props = [];
-  for (const k of Object.keys(v)) {
-    props.push(`${inspect(k)}: ${inspect(v[k])}`);
-  }
-  const body = props.length ? " " + props.join(", ") + " " : "";
-  const head = name2 === "Object" ? "" : name2 + " ";
-  return `//js(${head}{${body}})`;
-}
-function inspectCustomType(record) {
-  const props = Object.keys(record).map((label2) => {
-    const value3 = inspect(record[label2]);
-    return isNaN(parseInt(label2)) ? `${label2}: ${value3}` : value3;
-  }).join(", ");
-  return props ? `${record.constructor.name}(${props})` : record.constructor.name;
-}
-function inspectList(list2) {
-  return `[${list2.toArray().map(inspect).join(", ")}]`;
-}
-function inspectUtfCodepoint(codepoint2) {
-  return `//utfcodepoint(${String.fromCodePoint(codepoint2.value)})`;
-}
-function bit_array_inspect(bits, acc) {
-  if (bits.bitSize === 0) {
-    return acc;
-  }
-  for (let i = 0; i < bits.byteSize - 1; i++) {
-    acc += bits.byteAt(i).toString();
-    acc += ", ";
-  }
-  if (bits.byteSize * 8 === bits.bitSize) {
-    acc += bits.byteAt(bits.byteSize - 1).toString();
-  } else {
-    const trailingBitsCount = bits.bitSize % 8;
-    acc += bits.byteAt(bits.byteSize - 1) >> 8 - trailingBitsCount;
-    acc += `:size(${trailingBitsCount})`;
-  }
-  return acc;
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/int.mjs
@@ -2150,28 +2035,28 @@ function compare2(a, b) {
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/string.mjs
-function replace(string4, pattern, substitute) {
-  let _pipe = string4;
+function replace(string5, pattern, substitute) {
+  let _pipe = string5;
   let _pipe$1 = identity(_pipe);
   let _pipe$2 = string_replace(_pipe$1, pattern, substitute);
   return identity(_pipe$2);
 }
-function slice(string4, idx, len) {
+function slice(string5, idx, len) {
   let $ = len < 0;
   if ($) {
     return "";
   } else {
     let $1 = idx < 0;
     if ($1) {
-      let translated_idx = string_length(string4) + idx;
+      let translated_idx = string_length(string5) + idx;
       let $2 = translated_idx < 0;
       if ($2) {
         return "";
       } else {
-        return string_slice(string4, translated_idx, len);
+        return string_slice(string5, translated_idx, len);
       }
     } else {
-      return string_slice(string4, idx, len);
+      return string_slice(string5, idx, len);
     }
   }
 }
@@ -2182,21 +2067,21 @@ function concat2(strings) {
 }
 function repeat_loop(loop$string, loop$times, loop$acc) {
   while (true) {
-    let string4 = loop$string;
+    let string5 = loop$string;
     let times = loop$times;
     let acc = loop$acc;
     let $ = times <= 0;
     if ($) {
       return acc;
     } else {
-      loop$string = string4;
+      loop$string = string5;
       loop$times = times - 1;
-      loop$acc = acc + string4;
+      loop$acc = acc + string5;
     }
   }
 }
-function repeat(string4, times) {
-  return repeat_loop(string4, times, "");
+function repeat(string5, times) {
+  return repeat_loop(string5, times, "");
 }
 function padding(size, pad_string) {
   let pad_string_length = string_length(pad_string);
@@ -2204,36 +2089,36 @@ function padding(size, pad_string) {
   let extra = remainderInt(size, pad_string_length);
   return repeat(pad_string, num_pads) + slice(pad_string, 0, extra);
 }
-function pad_start(string4, desired_length, pad_string) {
-  let current_length = string_length(string4);
+function pad_start(string5, desired_length, pad_string) {
+  let current_length = string_length(string5);
   let to_pad_length = desired_length - current_length;
   let $ = to_pad_length <= 0;
   if ($) {
-    return string4;
+    return string5;
   } else {
-    return padding(to_pad_length, pad_string) + string4;
+    return padding(to_pad_length, pad_string) + string5;
   }
 }
-function trim(string4) {
-  let _pipe = string4;
+function trim(string5) {
+  let _pipe = string5;
   let _pipe$1 = trim_start(_pipe);
   return trim_end(_pipe$1);
 }
 function drop_start(loop$string, loop$num_graphemes) {
   while (true) {
-    let string4 = loop$string;
+    let string5 = loop$string;
     let num_graphemes = loop$num_graphemes;
     let $ = num_graphemes > 0;
     if (!$) {
-      return string4;
+      return string5;
     } else {
-      let $1 = pop_grapheme(string4);
+      let $1 = pop_grapheme(string5);
       if ($1.isOk()) {
         let string$1 = $1[0][1];
         loop$string = string$1;
         loop$num_graphemes = num_graphemes - 1;
       } else {
-        return string4;
+        return string5;
       }
     }
   }
@@ -2248,9 +2133,290 @@ function split2(x, substring) {
     return map(_pipe$2, identity);
   }
 }
-function inspect2(term) {
-  let _pipe = inspect(term);
-  return identity(_pipe);
+
+// build/dev/javascript/gleam_stdlib/gleam_stdlib_decode_ffi.mjs
+function index2(data, key) {
+  if (data instanceof Dict || data instanceof WeakMap || data instanceof Map) {
+    const token = {};
+    const entry = data.get(key, token);
+    if (entry === token) return new Ok(new None());
+    return new Ok(new Some(entry));
+  }
+  const key_is_int = Number.isInteger(key);
+  if (key_is_int && key >= 0 && key < 8 && data instanceof List) {
+    let i = 0;
+    for (const value3 of data) {
+      if (i === key) return new Ok(new Some(value3));
+      i++;
+    }
+    return new Error("Indexable");
+  }
+  if (key_is_int && Array.isArray(data) || data && typeof data === "object" || data && Object.getPrototypeOf(data) === Object.prototype) {
+    if (key in data) return new Ok(new Some(data[key]));
+    return new Ok(new None());
+  }
+  return new Error(key_is_int ? "Indexable" : "Dict");
+}
+function list(data, decode2, pushPath, index5, emptyList) {
+  if (!(data instanceof List || Array.isArray(data))) {
+    const error = new DecodeError2("List", classify_dynamic(data), emptyList);
+    return [emptyList, List.fromArray([error])];
+  }
+  const decoded = [];
+  for (const element2 of data) {
+    const layer = decode2(element2);
+    const [out, errors] = layer;
+    if (errors instanceof NonEmpty) {
+      const [_, errors2] = pushPath(layer, index5.toString());
+      return [emptyList, errors2];
+    }
+    decoded.push(out);
+    index5++;
+  }
+  return [List.fromArray(decoded), emptyList];
+}
+function int(data) {
+  if (Number.isInteger(data)) return new Ok(data);
+  return new Error(0);
+}
+function string2(data) {
+  if (typeof data === "string") return new Ok(data);
+  return new Error(0);
+}
+
+// build/dev/javascript/gleam_stdlib/gleam/dynamic/decode.mjs
+var DecodeError2 = class extends CustomType {
+  constructor(expected, found, path) {
+    super();
+    this.expected = expected;
+    this.found = found;
+    this.path = path;
+  }
+};
+var Decoder = class extends CustomType {
+  constructor(function$) {
+    super();
+    this.function = function$;
+  }
+};
+function run(data, decoder) {
+  let $ = decoder.function(data);
+  let maybe_invalid_data = $[0];
+  let errors = $[1];
+  if (errors.hasLength(0)) {
+    return new Ok(maybe_invalid_data);
+  } else {
+    return new Error(errors);
+  }
+}
+function success(data) {
+  return new Decoder((_) => {
+    return [data, toList([])];
+  });
+}
+function map3(decoder, transformer) {
+  return new Decoder(
+    (d) => {
+      let $ = decoder.function(d);
+      let data = $[0];
+      let errors = $[1];
+      return [transformer(data), errors];
+    }
+  );
+}
+function run_decoders(loop$data, loop$failure, loop$decoders) {
+  while (true) {
+    let data = loop$data;
+    let failure = loop$failure;
+    let decoders = loop$decoders;
+    if (decoders.hasLength(0)) {
+      return failure;
+    } else {
+      let decoder = decoders.head;
+      let decoders$1 = decoders.tail;
+      let $ = decoder.function(data);
+      let layer = $;
+      let errors = $[1];
+      if (errors.hasLength(0)) {
+        return layer;
+      } else {
+        loop$data = data;
+        loop$failure = failure;
+        loop$decoders = decoders$1;
+      }
+    }
+  }
+}
+function one_of(first2, alternatives) {
+  return new Decoder(
+    (dynamic_data) => {
+      let $ = first2.function(dynamic_data);
+      let layer = $;
+      let errors = $[1];
+      if (errors.hasLength(0)) {
+        return layer;
+      } else {
+        return run_decoders(dynamic_data, layer, alternatives);
+      }
+    }
+  );
+}
+function decode_error(expected, found) {
+  return toList([
+    new DecodeError2(expected, classify_dynamic(found), toList([]))
+  ]);
+}
+function run_dynamic_function(data, name2, f) {
+  let $ = f(data);
+  if ($.isOk()) {
+    let data$1 = $[0];
+    return [data$1, toList([])];
+  } else {
+    let zero = $[0];
+    return [
+      zero,
+      toList([new DecodeError2(name2, classify_dynamic(data), toList([]))])
+    ];
+  }
+}
+function decode_bool2(data) {
+  let $ = isEqual(identity(true), data);
+  if ($) {
+    return [true, toList([])];
+  } else {
+    let $1 = isEqual(identity(false), data);
+    if ($1) {
+      return [false, toList([])];
+    } else {
+      return [false, decode_error("Bool", data)];
+    }
+  }
+}
+function decode_int2(data) {
+  return run_dynamic_function(data, "Int", int);
+}
+var bool = /* @__PURE__ */ new Decoder(decode_bool2);
+var int2 = /* @__PURE__ */ new Decoder(decode_int2);
+function decode_string2(data) {
+  return run_dynamic_function(data, "String", string2);
+}
+var string3 = /* @__PURE__ */ new Decoder(decode_string2);
+function list2(inner) {
+  return new Decoder(
+    (data) => {
+      return list(
+        data,
+        inner.function,
+        (p, k) => {
+          return push_path2(p, toList([k]));
+        },
+        0,
+        toList([])
+      );
+    }
+  );
+}
+function push_path2(layer, path) {
+  let decoder = one_of(
+    string3,
+    toList([
+      (() => {
+        let _pipe = int2;
+        return map3(_pipe, to_string);
+      })()
+    ])
+  );
+  let path$1 = map(
+    path,
+    (key) => {
+      let key$1 = identity(key);
+      let $ = run(key$1, decoder);
+      if ($.isOk()) {
+        let key$2 = $[0];
+        return key$2;
+      } else {
+        return "<" + classify_dynamic(key$1) + ">";
+      }
+    }
+  );
+  let errors = map(
+    layer[1],
+    (error) => {
+      let _record = error;
+      return new DecodeError2(
+        _record.expected,
+        _record.found,
+        append(path$1, error.path)
+      );
+    }
+  );
+  return [layer[0], errors];
+}
+function index3(loop$path, loop$position, loop$inner, loop$data, loop$handle_miss) {
+  while (true) {
+    let path = loop$path;
+    let position = loop$position;
+    let inner = loop$inner;
+    let data = loop$data;
+    let handle_miss = loop$handle_miss;
+    if (path.hasLength(0)) {
+      let _pipe = inner(data);
+      return push_path2(_pipe, reverse(position));
+    } else {
+      let key = path.head;
+      let path$1 = path.tail;
+      let $ = index2(data, key);
+      if ($.isOk() && $[0] instanceof Some) {
+        let data$1 = $[0][0];
+        loop$path = path$1;
+        loop$position = prepend(key, position);
+        loop$inner = inner;
+        loop$data = data$1;
+        loop$handle_miss = handle_miss;
+      } else if ($.isOk() && $[0] instanceof None) {
+        return handle_miss(data, prepend(key, position));
+      } else {
+        let kind = $[0];
+        let $1 = inner(data);
+        let default$ = $1[0];
+        let _pipe = [
+          default$,
+          toList([new DecodeError2(kind, classify_dynamic(data), toList([]))])
+        ];
+        return push_path2(_pipe, reverse(position));
+      }
+    }
+  }
+}
+function subfield(field_path, field_decoder, next) {
+  return new Decoder(
+    (data) => {
+      let $ = index3(
+        field_path,
+        toList([]),
+        field_decoder.function,
+        data,
+        (data2, position) => {
+          let $12 = field_decoder.function(data2);
+          let default$ = $12[0];
+          let _pipe = [
+            default$,
+            toList([new DecodeError2("Field", "Nothing", toList([]))])
+          ];
+          return push_path2(_pipe, reverse(position));
+        }
+      );
+      let out = $[0];
+      let errors1 = $[1];
+      let $1 = next(out).function(data);
+      let out$1 = $1[0];
+      let errors2 = $1[1];
+      return [out$1, append(errors1, errors2)];
+    }
+  );
+}
+function field2(field_name, field_decoder, next) {
+  return subfield(toList([field_name]), field_decoder, next);
 }
 
 // build/dev/javascript/gleam_json/gleam_json_ffi.mjs
@@ -2263,18 +2429,127 @@ function object(entries) {
 function identity2(x) {
   return x;
 }
-function array(list2) {
-  return list2.toArray();
+function array(list3) {
+  return list3.toArray();
+}
+function decode(string5) {
+  try {
+    const result = JSON.parse(string5);
+    return new Ok(result);
+  } catch (err) {
+    return new Error(getJsonDecodeError(err, string5));
+  }
+}
+function getJsonDecodeError(stdErr, json) {
+  if (isUnexpectedEndOfInput(stdErr)) return new UnexpectedEndOfInput();
+  return toUnexpectedByteError(stdErr, json);
+}
+function isUnexpectedEndOfInput(err) {
+  const unexpectedEndOfInputRegex = /((unexpected (end|eof))|(end of data)|(unterminated string)|(json( parse error|\.parse)\: expected '(\:|\}|\])'))/i;
+  return unexpectedEndOfInputRegex.test(err.message);
+}
+function toUnexpectedByteError(err, json) {
+  let converters = [
+    v8UnexpectedByteError,
+    oldV8UnexpectedByteError,
+    jsCoreUnexpectedByteError,
+    spidermonkeyUnexpectedByteError
+  ];
+  for (let converter of converters) {
+    let result = converter(err, json);
+    if (result) return result;
+  }
+  return new UnexpectedByte("", 0);
+}
+function v8UnexpectedByteError(err) {
+  const regex = /unexpected token '(.)', ".+" is not valid JSON/i;
+  const match = regex.exec(err.message);
+  if (!match) return null;
+  const byte = toHex(match[1]);
+  return new UnexpectedByte(byte, -1);
+}
+function oldV8UnexpectedByteError(err) {
+  const regex = /unexpected token (.) in JSON at position (\d+)/i;
+  const match = regex.exec(err.message);
+  if (!match) return null;
+  const byte = toHex(match[1]);
+  const position = Number(match[2]);
+  return new UnexpectedByte(byte, position);
+}
+function spidermonkeyUnexpectedByteError(err, json) {
+  const regex = /(unexpected character|expected .*) at line (\d+) column (\d+)/i;
+  const match = regex.exec(err.message);
+  if (!match) return null;
+  const line = Number(match[2]);
+  const column = Number(match[3]);
+  const position = getPositionFromMultiline(line, column, json);
+  const byte = toHex(json[position]);
+  return new UnexpectedByte(byte, position);
+}
+function jsCoreUnexpectedByteError(err) {
+  const regex = /unexpected (identifier|token) "(.)"/i;
+  const match = regex.exec(err.message);
+  if (!match) return null;
+  const byte = toHex(match[2]);
+  return new UnexpectedByte(byte, 0);
+}
+function toHex(char) {
+  return "0x" + char.charCodeAt(0).toString(16).toUpperCase();
+}
+function getPositionFromMultiline(line, column, string5) {
+  if (line === 1) return column - 1;
+  let currentLn = 1;
+  let position = 0;
+  string5.split("").find((char, idx) => {
+    if (char === "\n") currentLn += 1;
+    if (currentLn === line) {
+      position = idx + column;
+      return true;
+    }
+    return false;
+  });
+  return position;
 }
 
 // build/dev/javascript/gleam_json/gleam/json.mjs
+var UnexpectedEndOfInput = class extends CustomType {
+};
+var UnexpectedByte = class extends CustomType {
+  constructor(x0) {
+    super();
+    this[0] = x0;
+  }
+};
+var UnableToDecode = class extends CustomType {
+  constructor(x0) {
+    super();
+    this[0] = x0;
+  }
+};
+function do_parse(json, decoder) {
+  return then$(
+    decode(json),
+    (dynamic_value) => {
+      let _pipe = run(dynamic_value, decoder);
+      return map_error(
+        _pipe,
+        (var0) => {
+          return new UnableToDecode(var0);
+        }
+      );
+    }
+  );
+}
+function parse(json, decoder) {
+  return do_parse(json, decoder);
+}
 function to_string2(json) {
   return json_to_string(json);
 }
-function bool(input2) {
+function bool2(input2) {
   return identity2(input2);
 }
-function int2(input2) {
+function int3(input2) {
   return identity2(input2);
 }
 function object2(entries) {
@@ -2289,14 +2564,6 @@ function array2(entries, inner_type) {
   return preprocessed_array(_pipe$1);
 }
 
-// build/dev/javascript/gleam_stdlib/gleam/io.mjs
-function debug(term) {
-  let _pipe = term;
-  let _pipe$1 = inspect2(_pipe);
-  print_debug(_pipe$1);
-  return term;
-}
-
 // build/dev/javascript/gleam_regexp/gleam_regexp_ffi.mjs
 function compile(pattern, options) {
   try {
@@ -2309,9 +2576,9 @@ function compile(pattern, options) {
     return new Error(new CompileError(error.message, number));
   }
 }
-function scan(regex, string4) {
+function scan(regex, string5) {
   regex.lastIndex = 0;
-  const matches = Array.from(string4.matchAll(regex)).map((match) => {
+  const matches = Array.from(string5.matchAll(regex)).map((match) => {
     const content = match[0];
     return new Match(content, submatches(match.slice(1)));
   });
@@ -2359,8 +2626,8 @@ function compile2(pattern, options) {
 function from_string(pattern) {
   return compile2(pattern, new Options(false, false));
 }
-function scan2(regexp, string4) {
-  return scan(regexp, string4);
+function scan2(regexp, string5) {
+  return scan(regexp, string5);
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/bool.mjs
@@ -3488,8 +3755,8 @@ function do_element_list_handlers(elements2, handlers2, key) {
   return index_fold(
     elements2,
     handlers2,
-    (handlers3, element2, index4) => {
-      let key$1 = key + "-" + to_string(index4);
+    (handlers3, element2, index5) => {
+      let key$1 = key + "-" + to_string(index5);
       return do_handlers(element2, handlers3, key$1);
     }
   );
@@ -4926,8 +5193,8 @@ function parse_userinfo_loop(loop$original, loop$uri_string, loop$pieces, loop$s
     }
   }
 }
-function parse_authority_pieces(string4, pieces) {
-  return parse_userinfo_loop(string4, string4, pieces, 0);
+function parse_authority_pieces(string5, pieces) {
+  return parse_userinfo_loop(string5, string5, pieces, 0);
 }
 function parse_authority_with_slashes(uri_string, pieces) {
   if (uri_string === "//") {
@@ -5139,7 +5406,7 @@ var empty2 = /* @__PURE__ */ new Uri(
   /* @__PURE__ */ new None(),
   /* @__PURE__ */ new None()
 );
-function parse(uri_string) {
+function parse2(uri_string) {
   return parse_scheme_loop(uri_string, uri_string, empty2, 0);
 }
 
@@ -5549,7 +5816,7 @@ function to_uri2(uri_string) {
     } else if (uri_string.startsWith("/")) {
       return from_relative_url(uri_string);
     } else {
-      return parse(uri_string);
+      return parse2(uri_string);
     }
   })();
   return replace_error(_pipe, new BadUrl(uri_string));
@@ -5583,7 +5850,7 @@ function get_localstorage(key) {
   const json = window.localStorage.getItem(key);
   if (json === null) return new Error(void 0);
   try {
-    return new Ok(JSON.parse(json));
+    return new Ok(json);
   } catch {
     return new Error(void 0);
   }
@@ -5611,8 +5878,9 @@ var Question = class extends CustomType {
   }
 };
 var QuizResult = class extends CustomType {
-  constructor(answers, score, out_of) {
+  constructor(results, answers, score, out_of) {
     super();
+    this.results = results;
     this.answers = answers;
     this.score = score;
     this.out_of = out_of;
@@ -5649,9 +5917,10 @@ var Model2 = class extends CustomType {
 function encode_result(result) {
   return object2(
     toList([
-      ["shareString", array2(result.answers, bool)],
-      ["score", int2(result.score)],
-      ["outOf", int2(result.out_of)]
+      ["results", array2(result.results, bool2)],
+      ["answers", array2(result.answers, int3)],
+      ["score", int3(result.score)],
+      ["outOf", int3(result.out_of)]
     ])
   );
 }
@@ -5675,15 +5944,13 @@ function save_results(result) {
 function get_today() {
   return from(
     (dispatch) => {
-      echo("Getting today's attempt", "src/mooquiz.gleam", 152);
       let $ = get_localstorage(date_format());
       if ($.isOk()) {
         let result = $[0];
-        echo(result, "src/mooquiz.gleam", 155);
+        echo(result, "src/mooquiz.gleam", 163);
         dispatch(new ReadAnswers(result));
         return void 0;
       } else {
-        echo("Fuck", "src/mooquiz.gleam", 160);
         return void 0;
       }
     }
@@ -5698,29 +5965,102 @@ function unanswered_questions(model) {
   );
 }
 function calculate_results(questions) {
+  let out_of = length(questions);
+  let answers = map(
+    questions,
+    (q) => {
+      let $ = q.selected;
+      if ($ instanceof Some) {
+        let answer = $[0];
+        return answer;
+      } else {
+        throw makeError(
+          "panic",
+          "mooquiz",
+          233,
+          "",
+          "Unfilled scored should never have been saved",
+          {}
+        );
+      }
+    }
+  );
+  let results = map(
+    questions,
+    (q) => {
+      return isEqual(q.selected, new Some(q.correct));
+    }
+  );
   let score = count(
     questions,
     (q) => {
       return isEqual(q.selected, new Some(q.correct));
     }
   );
-  let out_of = length(questions);
-  let answers = map(
-    questions,
-    (q) => {
-      return isEqual(q.selected, new Some(q.correct));
-    }
-  );
-  return new QuizResult(answers, score, out_of);
+  return new QuizResult(results, answers, score, out_of);
 }
 function update(model, msg) {
   if (msg instanceof ReadAnswers) {
     let answers = msg[0];
-    debug(answers);
-    return [model, none()];
+    let result_decoder = field2(
+      "answers",
+      list2(int2),
+      (answers2) => {
+        return field2(
+          "results",
+          list2(bool),
+          (results) => {
+            return field2(
+              "score",
+              int2,
+              (score) => {
+                return field2(
+                  "outOf",
+                  int2,
+                  (out_of) => {
+                    return success(
+                      new QuizResult(results, answers2, score, out_of)
+                    );
+                  }
+                );
+              }
+            );
+          }
+        );
+      }
+    );
+    let $ = parse(answers, result_decoder);
+    if (!$.isOk()) {
+      return [model, none()];
+    } else {
+      let attempt = $[0];
+      let questions = (() => {
+        let _pipe = attempt.answers;
+        let _pipe$1 = zip(_pipe, model.questions);
+        return map(
+          _pipe$1,
+          (x) => {
+            let _record = x[1];
+            return new Question(
+              _record.id,
+              _record.text,
+              _record.answers,
+              _record.correct,
+              new Some(x[0])
+            );
+          }
+        );
+      })();
+      return [
+        (() => {
+          let _record = model;
+          return new Model2(_record.title, true, questions);
+        })(),
+        none()
+      ];
+    }
   } else if (msg instanceof GotQuestions && msg[0].isOk()) {
     let file = msg[0][0];
-    debug("Pulled Questions");
     let $ = (() => {
       let _pipe = file;
       let _pipe$1 = trim(_pipe);
@@ -5730,7 +6070,7 @@ function update(model, msg) {
       throw makeError(
         "let_assert",
         "mooquiz",
-        67,
+        82,
         "update",
         "Pattern match failed, no pattern matched the value.",
         { value: $ }
@@ -5746,7 +6086,7 @@ function update(model, msg) {
           throw makeError(
             "let_assert",
             "mooquiz",
-            69,
+            84,
             "",
             "Pattern match failed, no pattern matched the value.",
             { value: $1 }
@@ -5806,14 +6146,12 @@ function update(model, msg) {
     })();
     return [new Model2(title, false, questions$2), get_today()];
   } else if (msg instanceof GotQuestions && !msg[0].isOk()) {
-    debug("Pulling failed");
     return [model, none()];
   } else if (msg instanceof SubmitAnswers) {
     let $ = unanswered_questions(model);
     if ($) {
       return [model, none()];
     } else {
-      debug("Submitted Answers");
       return [
         (() => {
           let _record = model;
@@ -5870,9 +6208,9 @@ function update(model, msg) {
     }
   }
 }
-function share_string(answers) {
+function share_string(results) {
   let _pipe = map(
-    answers,
+    results,
     (x) => {
       if (!x) {
         return "\u274C";
@@ -5898,7 +6236,7 @@ function result_panel(model) {
           )
         ])
       ),
-      div(toList([]), toList([text2(share_string(result.answers))]))
+      div(toList([]), toList([text2(share_string(result.results))]))
     ])
   );
 }
@@ -6055,19 +6393,19 @@ function echo(value3, file, line) {
   const file_line = `${file}:${line}`;
   const string_value = echo$inspect(value3);
   if (typeof process === "object" && process.stderr?.write) {
-    const string4 = `${grey}${file_line}${reset_color}
+    const string5 = `${grey}${file_line}${reset_color}
 ${string_value}
 `;
-    process.stderr.write(string4);
+    process.stderr.write(string5);
   } else if (typeof Deno === "object") {
-    const string4 = `${grey}${file_line}${reset_color}
+    const string5 = `${grey}${file_line}${reset_color}
 ${string_value}
 `;
-    Deno.stderr.writeSync(new TextEncoder().encode(string4));
+    Deno.stderr.writeSync(new TextEncoder().encode(string5));
   } else {
-    const string4 = `${file_line}
+    const string5 = `${file_line}
 ${string_value}`;
-    console.log(string4);
+    console.log(string5);
   }
   return value3;
 }
@@ -6090,11 +6428,11 @@ function echo$inspectString(str) {
   new_str += '"';
   return new_str;
 }
-function echo$inspectDict(map6) {
+function echo$inspectDict(map7) {
   let body = "dict.from_list([";
   let first2 = true;
   let key_value_pairs = [];
-  map6.forEach((value3, key) => {
+  map7.forEach((value3, key) => {
     key_value_pairs.push([key, value3]);
   });
   key_value_pairs.sort();
