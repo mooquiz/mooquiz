@@ -27,9 +27,9 @@ type QuizResult {
 }
 
 type Msg {
-	ReadAnswers(String)
+  ReadAnswers(String)
   SubmitAnswers
-	ToggleResultPanel
+  ToggleResultPanel
   SelectAnswer(String)
   GotQuestions(Result(String, rsvp.Error))
 }
@@ -50,7 +50,7 @@ fn init(_flags) -> #(Model, effect.Effect(Msg)) {
     title: "Loading",
     submitted: False,
     questions: [],
-		show_results: True
+    show_results: True
   )
 
   let questions_url = questions_dir_url <> date_format() <> ".txt"
@@ -60,29 +60,29 @@ fn init(_flags) -> #(Model, effect.Effect(Msg)) {
 
 fn update(model: Model, msg: Msg){
   case msg {
-	  ToggleResultPanel -> {
-		  #(Model(..model, show_results: !model.show_results), effect.none())
-		}
-	  ReadAnswers(answers) -> { 
-			let result_decoder = {
-				use answers <- decode.field("answers", decode.list(decode.int))
-			  use results <- decode.field("results", decode.list(decode.bool))
-				use score <- decode.field("score", decode.int)
-				use out_of <- decode.field("outOf", decode.int)
-				decode.success(QuizResult(results:, answers:, score:, out_of:))
-			}
+    ToggleResultPanel -> {
+      #(Model(..model, show_results: !model.show_results), effect.none())
+    }
+    ReadAnswers(answers) -> { 
+      let result_decoder = {
+        use answers <- decode.field("answers", decode.list(decode.int))
+        use results <- decode.field("results", decode.list(decode.bool))
+        use score <- decode.field("score", decode.int)
+        use out_of <- decode.field("outOf", decode.int)
+        decode.success(QuizResult(results:, answers:, score:, out_of:))
+      }
       case json.parse(answers, result_decoder) {
-			  Error(_) -> #(model, effect.none())
-			  Ok(attempt) -> {
-				  let questions = attempt.answers
-					|> list.zip(model.questions)
-					|> list.map(fn(x) { 
-					  Question(..x.1, selected: Some(x.0))
-					})
-					#(Model(..model, questions: questions, submitted: True), effect.none())
-				}
-			}
-		}
+        Error(_) -> #(model, effect.none())
+        Ok(attempt) -> {
+          let questions = attempt.answers
+          |> list.zip(model.questions)
+          |> list.map(fn(x) { 
+            Question(..x.1, selected: Some(x.0))
+          })
+          #(Model(..model, questions: questions, submitted: True), effect.none())
+        }
+      }
+    }
     GotQuestions(Ok(file)) -> {
       let assert [title, ..questions] = file |> string.trim |> string.split("\n\n")
       let questions = list.map(questions, fn (q) {
@@ -90,10 +90,10 @@ fn update(model: Model, msg: Msg){
         
         let answers = 
           answers
-					|> list.length
-					|> list.range(1)
-					|> list.reverse
-					|> list.zip(answers)
+          |> list.length
+          |> list.range(1)
+          |> list.reverse
+          |> list.zip(answers)
           |> list.map(fn(a) {
               let #(id, text) = a
               Answer(id, text)
@@ -104,10 +104,10 @@ fn update(model: Model, msg: Msg){
 
       let questions =
         questions
-				|> list.length
-				|> list.range(1)
-				|> list.reverse
-				|> list.zip(questions)
+        |> list.length
+        |> list.range(1)
+        |> list.reverse
+        |> list.zip(questions)
         |> list.map(fn(q) {
           let #(id, #(question_text, correct, answers)) = q
           Question(
@@ -156,22 +156,22 @@ fn update(model: Model, msg: Msg){
 }
 
 fn save_results(result: QuizResult) {
-	effect.from(fn(_dispatch) {
-		set_localstorage(date_format(), result |> encode_result |> json.to_string)
-	})
+  effect.from(fn(_dispatch) {
+    set_localstorage(date_format(), result |> encode_result |> json.to_string)
+  })
 }
 
 fn get_today() {
   effect.from(fn(dispatch) {
-	  case get_localstorage(date_format()) {
-		  Ok(result) -> { 
-			  echo result
-				dispatch(ReadAnswers(result))
-				Nil
-			}
-			Error(_) -> Nil
-		}
-	})
+    case get_localstorage(date_format()) {
+      Ok(result) -> { 
+        echo result
+        dispatch(ReadAnswers(result))
+        Nil
+      }
+      Error(_) -> Nil
+    }
+  })
 }
 
 fn encode_result(result: QuizResult) -> json.Json {
@@ -203,52 +203,52 @@ fn unanswered_questions(model: Model) {
 }
 
 fn button(model: Model) { 
-	let classes = case unanswered_questions(model) {
-		True -> "bg-zinc-600 cursor-not-allowed"
-		False -> "active:translate-y-0.5 active:scale-95 border-zinc-600 bg-zinc-200"
-	}
-	html.button([
-		event.on_click(SubmitAnswers),
-		attribute.class("duration-200 border border-zinc-600 p-2 rounded-md " <> classes)
-	], [html.text("Submit")])
+  let classes = case unanswered_questions(model) {
+    True -> "bg-zinc-600 cursor-not-allowed"
+    False -> "active:translate-y-0.5 active:scale-95 border-zinc-600 bg-zinc-200"
+  }
+  html.button([
+    event.on_click(SubmitAnswers),
+    attribute.class("duration-200 border border-zinc-600 p-2 rounded-md " <> classes)
+  ], [html.text("Submit")])
 }
 
 fn result_panel(model: Model) {
   case model.show_results {
-	  True -> {
-			let result = calculate_results(model.questions)
-			html.div([
-				attribute.class("fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50"),
-				event.on_click(ToggleResultPanel)
-			], [
-				html.div([
-					attribute.class("border-2 border-zinc-600 rounded-lg p-4 absolute bg-white")
-				], [
-				  html.header([attribute.class("flex")], [
-						html.h1([attribute.class("text-lg font-bold mb-6 grow")], [html.text("Well Done!")]),
-						html.a([
-							event.on_click(ToggleResultPanel),
-							attribute.class("duration-200 active:translate-y-0.5 active:scale-95 text-lg font-bold cursor-pointer")
-						], [html.text("✕")])
-					]),
-					html.p([], [html.text("You scored " <> int.to_string(result.score) <> " out of " <> int.to_string(result.out_of))]),
-					html.p([attribute.class("mb-6")], [html.text(share_string(result.results))]),
-					html.p([attribute.class("mb-6")], [html.text("A new set of questions will appear at midnight.")]),
-				])
-			])
-		}
-		False -> html.div([], [])
-	}
+    True -> {
+      let result = calculate_results(model.questions)
+      html.div([
+        attribute.class("fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50"),
+        event.on_click(ToggleResultPanel)
+      ], [
+        html.div([
+          attribute.class("border-2 border-zinc-600 rounded-lg p-4 absolute bg-white")
+        ], [
+          html.header([attribute.class("flex")], [
+            html.h1([attribute.class("text-lg font-bold mb-6 grow")], [html.text("Well Done!")]),
+            html.a([
+              event.on_click(ToggleResultPanel),
+              attribute.class("duration-200 active:translate-y-0.5 active:scale-95 text-lg font-bold cursor-pointer")
+            ], [html.text("✕")])
+          ]),
+          html.p([], [html.text("You scored " <> int.to_string(result.score) <> " out of " <> int.to_string(result.out_of))]),
+          html.p([attribute.class("mb-6")], [html.text(share_string(result.results))]),
+          html.p([attribute.class("mb-6")], [html.text("A new set of questions will appear at midnight.")]),
+        ])
+      ])
+    }
+    False -> html.div([], [])
+  }
 }
 
 fn calculate_results(questions: List(Question)) {
   let out_of = list.length(questions)
-	let answers = list.map(questions, fn(q) { 
-	  case q.selected {
-		  Some(answer) -> answer
-			None -> panic as "Unfilled scored should never have been saved"
-		}
-	})
+  let answers = list.map(questions, fn(q) { 
+    case q.selected {
+      Some(answer) -> answer
+      None -> panic as "Unfilled scored should never have been saved"
+    }
+  })
   let results = list.map(questions, fn(q) { q.selected == Some(q.correct) })
   let score = list.count(questions, fn(q) { q.selected == Some(q.correct) })
   QuizResult(results: results, answers: answers, score: score, out_of: out_of)
@@ -256,11 +256,11 @@ fn calculate_results(questions: List(Question)) {
 
 fn share_string(results: List(Bool)) {
   list.map(results, fn(x) { 
-	  case x {
+    case x {
       False -> "❌"
       True -> "✔️"
-		}
-	}) |> string.join("")
+    }
+  }) |> string.join("")
 } 
 
 fn answer_radio(question: Question, answer: Answer, submitted: Bool) {
@@ -312,9 +312,9 @@ fn view(model: Model) {
         ])
       })),
       case model.submitted {
-			  True -> result_panel(model)
+        True -> result_panel(model)
         False -> button(model)
-			}
+      }
     ])
   ])
 }
