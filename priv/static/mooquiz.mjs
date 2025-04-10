@@ -183,15 +183,15 @@ var BitArray = class {
       }
     } else {
       for (let i = 0; i < wholeByteCount; i++) {
-        const a = bitArrayByteAt(this.rawBuffer, this.bitOffset, i);
+        const a2 = bitArrayByteAt(this.rawBuffer, this.bitOffset, i);
         const b = bitArrayByteAt(other.rawBuffer, other.bitOffset, i);
-        if (a !== b) {
+        if (a2 !== b) {
           return false;
         }
       }
       const trailingBitsCount = this.bitSize % 8;
       if (trailingBitsCount) {
-        const a = bitArrayByteAt(
+        const a2 = bitArrayByteAt(
           this.rawBuffer,
           this.bitOffset,
           wholeByteCount
@@ -202,7 +202,7 @@ var BitArray = class {
           wholeByteCount
         );
         const unusedLowBitCount = 8 - trailingBitsCount;
-        if (a >> unusedLowBitCount !== b >> unusedLowBitCount) {
+        if (a2 >> unusedLowBitCount !== b >> unusedLowBitCount) {
           return false;
         }
       }
@@ -252,9 +252,9 @@ function bitArrayByteAt(buffer, bitOffset, index5) {
   if (bitOffset === 0) {
     return buffer[index5] ?? 0;
   } else {
-    const a = buffer[index5] << bitOffset & 255;
+    const a2 = buffer[index5] << bitOffset & 255;
     const b = buffer[index5 + 1] >> 8 - bitOffset;
-    return a | b;
+    return a2 | b;
   }
 }
 var UtfCodepoint = class {
@@ -572,23 +572,23 @@ var Error = class extends Result {
 function isEqual(x, y) {
   let values2 = [x, y];
   while (values2.length) {
-    let a = values2.pop();
+    let a2 = values2.pop();
     let b = values2.pop();
-    if (a === b) continue;
-    if (!isObject(a) || !isObject(b)) return false;
-    let unequal = !structurallyCompatibleObjects(a, b) || unequalDates(a, b) || unequalBuffers(a, b) || unequalArrays(a, b) || unequalMaps(a, b) || unequalSets(a, b) || unequalRegExps(a, b);
+    if (a2 === b) continue;
+    if (!isObject(a2) || !isObject(b)) return false;
+    let unequal = !structurallyCompatibleObjects(a2, b) || unequalDates(a2, b) || unequalBuffers(a2, b) || unequalArrays(a2, b) || unequalMaps(a2, b) || unequalSets(a2, b) || unequalRegExps(a2, b);
     if (unequal) return false;
-    const proto = Object.getPrototypeOf(a);
+    const proto = Object.getPrototypeOf(a2);
     if (proto !== null && typeof proto.equals === "function") {
       try {
-        if (a.equals(b)) continue;
+        if (a2.equals(b)) continue;
         else return false;
       } catch {
       }
     }
-    let [keys2, get2] = getters(a);
-    for (let k of keys2(a)) {
-      values2.push(get2(a, k), get2(b, k));
+    let [keys2, get2] = getters(a2);
+    for (let k of keys2(a2)) {
+      values2.push(get2(a2, k), get2(b, k));
     }
   }
   return true;
@@ -601,49 +601,49 @@ function getters(object3) {
     return [(x) => [...extra, ...Object.keys(x)], (x, y) => x[y]];
   }
 }
-function unequalDates(a, b) {
-  return a instanceof Date && (a > b || a < b);
+function unequalDates(a2, b) {
+  return a2 instanceof Date && (a2 > b || a2 < b);
 }
-function unequalBuffers(a, b) {
-  return !(a instanceof BitArray) && a.buffer instanceof ArrayBuffer && a.BYTES_PER_ELEMENT && !(a.byteLength === b.byteLength && a.every((n, i) => n === b[i]));
+function unequalBuffers(a2, b) {
+  return !(a2 instanceof BitArray) && a2.buffer instanceof ArrayBuffer && a2.BYTES_PER_ELEMENT && !(a2.byteLength === b.byteLength && a2.every((n, i) => n === b[i]));
 }
-function unequalArrays(a, b) {
-  return Array.isArray(a) && a.length !== b.length;
+function unequalArrays(a2, b) {
+  return Array.isArray(a2) && a2.length !== b.length;
 }
-function unequalMaps(a, b) {
-  return a instanceof Map && a.size !== b.size;
+function unequalMaps(a2, b) {
+  return a2 instanceof Map && a2.size !== b.size;
 }
-function unequalSets(a, b) {
-  return a instanceof Set && (a.size != b.size || [...a].some((e) => !b.has(e)));
+function unequalSets(a2, b) {
+  return a2 instanceof Set && (a2.size != b.size || [...a2].some((e) => !b.has(e)));
 }
-function unequalRegExps(a, b) {
-  return a instanceof RegExp && (a.source !== b.source || a.flags !== b.flags);
+function unequalRegExps(a2, b) {
+  return a2 instanceof RegExp && (a2.source !== b.source || a2.flags !== b.flags);
 }
-function isObject(a) {
-  return typeof a === "object" && a !== null;
+function isObject(a2) {
+  return typeof a2 === "object" && a2 !== null;
 }
-function structurallyCompatibleObjects(a, b) {
-  if (typeof a !== "object" && typeof b !== "object" && (!a || !b))
+function structurallyCompatibleObjects(a2, b) {
+  if (typeof a2 !== "object" && typeof b !== "object" && (!a2 || !b))
     return false;
   let nonstructural = [Promise, WeakSet, WeakMap, Function];
-  if (nonstructural.some((c) => a instanceof c)) return false;
-  return a.constructor === b.constructor;
+  if (nonstructural.some((c) => a2 instanceof c)) return false;
+  return a2.constructor === b.constructor;
 }
-function remainderInt(a, b) {
+function remainderInt(a2, b) {
   if (b === 0) {
     return 0;
   } else {
-    return a % b;
+    return a2 % b;
   }
 }
-function divideInt(a, b) {
-  return Math.trunc(divideFloat(a, b));
+function divideInt(a2, b) {
+  return Math.trunc(divideFloat(a2, b));
 }
-function divideFloat(a, b) {
+function divideFloat(a2, b) {
   if (b === 0) {
     return 0;
   } else {
-    return a / b;
+    return a2 / b;
   }
 }
 function makeError(variant, module, line, fn, message, extra) {
@@ -676,8 +676,8 @@ var None = class extends CustomType {
 };
 function to_result(option, e) {
   if (option instanceof Some) {
-    let a = option[0];
-    return new Ok(a);
+    let a2 = option[0];
+    return new Ok(a2);
   } else {
     return new Error(e);
   }
@@ -979,11 +979,11 @@ function then$(result, fun) {
 }
 function unwrap_both(result) {
   if (result.isOk()) {
-    let a = result[0];
-    return a;
+    let a2 = result[0];
+    return a2;
   } else {
-    let a = result[0];
-    return a;
+    let a2 = result[0];
+    return a2;
   }
 }
 function replace_error(result, error) {
@@ -1100,8 +1100,8 @@ function hashByReference(o) {
   referenceMap.set(o, hash);
   return hash;
 }
-function hashMerge(a, b) {
-  return a ^ b + 2654435769 + (a << 6) + (a >> 2) | 0;
+function hashMerge(a2, b) {
+  return a2 ^ b + 2654435769 + (a2 << 6) + (a2 >> 2) | 0;
 }
 function hashString(s) {
   let hash = 0;
@@ -2020,12 +2020,12 @@ function try_get_field(value3, field3, or_else) {
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/int.mjs
-function compare2(a, b) {
-  let $ = a === b;
+function compare2(a2, b) {
+  let $ = a2 === b;
   if ($) {
     return new Eq();
   } else {
-    let $1 = a < b;
+    let $1 = a2 < b;
     if ($1) {
       return new Lt();
     } else {
@@ -2307,8 +2307,8 @@ function list2(inner) {
       return list(
         data,
         inner.function,
-        (p, k) => {
-          return push_path2(p, toList([k]));
+        (p2, k) => {
+          return push_path2(p2, toList([k]));
         },
         0,
         toList([])
@@ -2694,8 +2694,8 @@ function modulo_unwrap(dividend, divisor) {
     return remainder;
   }
 }
-function div_with_remainder(a, b) {
-  return [floor_div(a, b), modulo_unwrap(a, b)];
+function div_with_remainder(a2, b) {
+  return [floor_div(a2, b), modulo_unwrap(a2, b)];
 }
 var day_microseconds = 864e8;
 var hour_microseconds = 36e8;
@@ -4017,7 +4017,7 @@ function createElementNode({ prev, next, dispatch, stack }) {
     handlersForEl = registeredHandlers.get(el);
   }
   const prevHandlers = canMorph ? new Set(handlersForEl.keys()) : null;
-  const prevAttributes = canMorph ? new Set(Array.from(prev.attributes, (a) => a.name)) : null;
+  const prevAttributes = canMorph ? new Set(Array.from(prev.attributes, (a2) => a2.name)) : null;
   let className = null;
   let style2 = null;
   let innerHTML = null;
@@ -4532,6 +4532,9 @@ function start2(app, selector, flags) {
 function text2(content) {
   return text(content);
 }
+function header(attrs, children2) {
+  return element("header", attrs, children2);
+}
 function h1(attrs, children2) {
   return element("h1", attrs, children2);
 }
@@ -4543,6 +4546,12 @@ function main(attrs, children2) {
 }
 function div(attrs, children2) {
   return element("div", attrs, children2);
+}
+function p(attrs, children2) {
+  return element("p", attrs, children2);
+}
+function a(attrs, children2) {
+  return element("a", attrs, children2);
 }
 function span(attrs, children2) {
   return element("span", attrs, children2);
@@ -5573,9 +5582,9 @@ function tap(promise, callback) {
   let _pipe = promise;
   return map_promise(
     _pipe,
-    (a) => {
-      callback(a);
-      return a;
+    (a2) => {
+      callback(a2);
+      return a2;
     }
   );
 }
@@ -5585,8 +5594,8 @@ function try_await(promise, callback) {
     _pipe,
     (result) => {
       if (result.isOk()) {
-        let a = result[0];
-        return callback(a);
+        let a2 = result[0];
+        return callback(a2);
       } else {
         let e = result[0];
         return resolve(new Error(e));
@@ -5894,6 +5903,8 @@ var ReadAnswers = class extends CustomType {
 };
 var SubmitAnswers = class extends CustomType {
 };
+var ToggleResultPanel = class extends CustomType {
+};
 var SelectAnswer = class extends CustomType {
   constructor(x0) {
     super();
@@ -5907,11 +5918,12 @@ var GotQuestions = class extends CustomType {
   }
 };
 var Model2 = class extends CustomType {
-  constructor(title, submitted, questions) {
+  constructor(title, submitted, questions, show_results) {
     super();
     this.title = title;
     this.submitted = submitted;
     this.questions = questions;
+    this.show_results = show_results;
   }
 };
 function encode_result(result) {
@@ -5947,7 +5959,7 @@ function get_today() {
       let $ = get_localstorage(date_format());
       if ($.isOk()) {
         let result = $[0];
-        echo(result, "src/mooquiz.gleam", 163);
+        echo(result, "src/mooquiz.gleam", 168);
         dispatch(new ReadAnswers(result));
         return void 0;
       } else {
@@ -5964,6 +5976,25 @@ function unanswered_questions(model) {
     }
   );
 }
+function button2(model) {
+  let classes = (() => {
+    let $ = unanswered_questions(model);
+    if ($) {
+      return "bg-zinc-600 cursor-not-allowed";
+    } else {
+      return "active:translate-y-0.5 active:scale-95 border-zinc-600 bg-zinc-200";
+    }
+  })();
+  return button(
+    toList([
+      on_click(new SubmitAnswers()),
+      class$(
+        "duration-200 border border-zinc-600 p-2 rounded-md " + classes
+      )
+    ]),
+    toList([text2("Submit")])
+  );
+}
 function calculate_results(questions) {
   let out_of = length(questions);
   let answers = map(
@@ -5977,7 +6008,7 @@ function calculate_results(questions) {
         throw makeError(
           "panic",
           "mooquiz",
-          233,
+          248,
           "",
           "Unfilled scored should never have been saved",
           {}
@@ -6000,7 +6031,20 @@ function calculate_results(questions) {
   return new QuizResult(results, answers, score, out_of);
 }
 function update(model, msg) {
-  if (msg instanceof ReadAnswers) {
+  if (msg instanceof ToggleResultPanel) {
+    return [
+      (() => {
+        let _record = model;
+        return new Model2(
+          _record.title,
+          _record.submitted,
+          _record.questions,
+          !model.show_results
+        );
+      })(),
+      none()
+    ];
+  } else if (msg instanceof ReadAnswers) {
     let answers = msg[0];
     let result_decoder = field2(
       "answers",
@@ -6054,7 +6098,7 @@ function update(model, msg) {
       return [
         (() => {
           let _record = model;
-          return new Model2(_record.title, true, questions);
+          return new Model2(_record.title, true, questions, _record.show_results);
         })(),
         none()
       ];
@@ -6070,7 +6114,7 @@ function update(model, msg) {
       throw makeError(
         "let_assert",
         "mooquiz",
-        82,
+        87,
         "update",
         "Pattern match failed, no pattern matched the value.",
         { value: $ }
@@ -6086,7 +6130,7 @@ function update(model, msg) {
           throw makeError(
             "let_assert",
             "mooquiz",
-            84,
+            89,
             "",
             "Pattern match failed, no pattern matched the value.",
             { value: $1 }
@@ -6103,9 +6147,9 @@ function update(model, msg) {
           let _pipe$4 = zip(_pipe$3, answers);
           return map(
             _pipe$4,
-            (a) => {
-              let id = a[0];
-              let text3 = a[1];
+            (a2) => {
+              let id = a2[0];
+              let text3 = a2[1];
               return new Answer(id, text3);
             }
           );
@@ -6144,7 +6188,7 @@ function update(model, msg) {
         }
       );
     })();
-    return [new Model2(title, false, questions$2), get_today()];
+    return [new Model2(title, false, questions$2, true), get_today()];
   } else if (msg instanceof GotQuestions && !msg[0].isOk()) {
     return [model, none()];
   } else if (msg instanceof SubmitAnswers) {
@@ -6155,7 +6199,12 @@ function update(model, msg) {
       return [
         (() => {
           let _record = model;
-          return new Model2(_record.title, true, _record.questions);
+          return new Model2(
+            _record.title,
+            true,
+            _record.questions,
+            _record.show_results
+          );
         })(),
         save_results(calculate_results(model.questions))
       ];
@@ -6196,7 +6245,12 @@ function update(model, msg) {
         return [
           (() => {
             let _record = model;
-            return new Model2(_record.title, _record.submitted, questions);
+            return new Model2(
+              _record.title,
+              _record.submitted,
+              questions,
+              _record.show_results
+            );
           })(),
           none()
         ];
@@ -6222,46 +6276,67 @@ function share_string(results) {
   return join(_pipe, "");
 }
 function result_panel(model) {
-  let result = calculate_results(model.questions);
-  return div(
-    toList([class$("border-2 border-zinc-600 rounded-lg p-4")]),
-    toList([
-      div(
-        toList([]),
-        toList([
-          text2(
-            "You scored " + to_string(result.score) + " out of " + to_string(
-              result.out_of
-            )
-          )
-        ])
-      ),
-      div(toList([]), toList([text2(share_string(result.results))]))
-    ])
-  );
-}
-function button2(model) {
-  let $ = model.submitted;
-  if (!$) {
-    let classes = (() => {
-      let $1 = unanswered_questions(model);
-      if ($1) {
-        return "bg-zinc-600 cursor-not-allowed";
-      } else {
-        return "active:translate-y-0.5 active:scale-95 border-zinc-600 bg-zinc-200";
-      }
-    })();
-    return button(
+  let $ = model.show_results;
+  if ($) {
+    let result = calculate_results(model.questions);
+    return div(
       toList([
-        on_click(new SubmitAnswers()),
         class$(
-          "duration-200 border border-zinc-600 p-2 rounded-md " + classes
+          "fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50"
         )
       ]),
-      toList([text2("Submit")])
+      toList([
+        div(
+          toList([
+            class$(
+              "border-2 border-zinc-600 rounded-lg p-4 absolute bg-white"
+            )
+          ]),
+          toList([
+            header(
+              toList([class$("flex")]),
+              toList([
+                h1(
+                  toList([class$("text-lg font-bold mb-6 grow")]),
+                  toList([text2("Well Done!")])
+                ),
+                a(
+                  toList([
+                    on_click(new ToggleResultPanel()),
+                    class$(
+                      "duration-200 active:translate-y-0.5 active:scale-95 text-lg font-bold cursor-pointer"
+                    )
+                  ]),
+                  toList([text2("\u2715")])
+                )
+              ])
+            ),
+            p(
+              toList([]),
+              toList([
+                text2(
+                  "You scored " + to_string(result.score) + " out of " + to_string(
+                    result.out_of
+                  )
+                )
+              ])
+            ),
+            p(
+              toList([class$("mb-6")]),
+              toList([text2(share_string(result.results))])
+            ),
+            p(
+              toList([class$("mb-6")]),
+              toList([
+                text2("A new set of questions will appear at midnight.")
+              ])
+            )
+          ])
+        )
+      ])
     );
   } else {
-    return result_panel(model);
+    return div(toList([]), toList([]));
   }
 }
 function answer_radio(question, answer, submitted) {
@@ -6352,7 +6427,14 @@ function view(model) {
               }
             )
           ),
-          button2(model)
+          (() => {
+            let $ = model.submitted;
+            if ($) {
+              return result_panel(model);
+            } else {
+              return button2(model);
+            }
+          })()
         ])
       )
     ])
@@ -6360,7 +6442,7 @@ function view(model) {
 }
 var questions_dir_url = "https://raw.githubusercontent.com/mooquiz/Questions/refs/heads/main/";
 function init2(_) {
-  let model = new Model2("Loading", false, toList([]));
+  let model = new Model2("Loading", false, toList([]), true);
   let questions_url = questions_dir_url + date_format() + ".txt";
   return [
     model,
@@ -6379,7 +6461,7 @@ function main2() {
     throw makeError(
       "let_assert",
       "mooquiz",
-      42,
+      43,
       "main",
       "Pattern match failed, no pattern matched the value.",
       { value: $ }

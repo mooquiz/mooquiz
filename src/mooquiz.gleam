@@ -29,12 +29,13 @@ type QuizResult {
 type Msg {
 	ReadAnswers(String)
   SubmitAnswers
+	ToggleResultPanel
   SelectAnswer(String)
   GotQuestions(Result(String, rsvp.Error))
 }
 
 type Model {
-  Model(title: String, submitted: Bool, questions: List(Question))
+  Model(title: String, submitted: Bool, questions: List(Question), show_results: Bool)
 }
 
 pub fn main() {
@@ -48,7 +49,8 @@ fn init(_flags) -> #(Model, effect.Effect(Msg)) {
   let model = Model(
     title: "Loading",
     submitted: False,
-    questions: []
+    questions: [],
+		show_results: True
   )
 
   let questions_url = questions_dir_url <> date_format() <> ".txt"
@@ -58,6 +60,9 @@ fn init(_flags) -> #(Model, effect.Effect(Msg)) {
 
 fn update(model: Model, msg: Msg){
   case msg {
+	  ToggleResultPanel -> {
+		  #(Model(..model, show_results: !model.show_results), effect.none())
+		}
 	  ReadAnswers(answers) -> { 
 			let result_decoder = {
 				use answers <- decode.field("answers", decode.list(decode.int))
@@ -116,7 +121,7 @@ fn update(model: Model, msg: Msg){
             None)
         })
 
-      #(Model(title, False, questions), get_today())
+      #(Model(title: title, submitted: False, questions: questions, show_results: True), get_today())
     }
     GotQuestions(Error(_)) -> #(model, effect.none())
     SubmitAnswers -> { 
@@ -198,31 +203,41 @@ fn unanswered_questions(model: Model) {
 }
 
 fn button(model: Model) { 
-  case model.submitted {
-    False -> {
-      let classes = case unanswered_questions(model) {
-        True -> "bg-zinc-600 cursor-not-allowed"
-        False -> "active:translate-y-0.5 active:scale-95 border-zinc-600 bg-zinc-200"
-      }
-      html.button([
-        event.on_click(SubmitAnswers),
-        attribute.class("duration-200 border border-zinc-600 p-2 rounded-md " <> classes)
-      ], [html.text("Submit")])
-    }
-    True -> result_panel(model)
-  }
+	let classes = case unanswered_questions(model) {
+		True -> "bg-zinc-600 cursor-not-allowed"
+		False -> "active:translate-y-0.5 active:scale-95 border-zinc-600 bg-zinc-200"
+	}
+	html.button([
+		event.on_click(SubmitAnswers),
+		attribute.class("duration-200 border border-zinc-600 p-2 rounded-md " <> classes)
+	], [html.text("Submit")])
 }
 
 fn result_panel(model: Model) {
-  let result = calculate_results(model.questions)
-
-  html.div([
-    attribute.class("border-2 border-zinc-600 rounded-lg p-4")
-    ], [
-      html.div([], [html.text("You scored " <> int.to_string(result.score) <> " out of " <> int.to_string(result.out_of))]),
-      html.div([], [html.text(share_string(result.results))])
-    ]
-  )
+  case model.show_results {
+	  True -> {
+			let result = calculate_results(model.questions)
+			html.div([
+				attribute.class("fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50")
+			], [
+				html.div([
+					attribute.class("border-2 border-zinc-600 rounded-lg p-4 absolute bg-white")
+				], [
+				  html.header([attribute.class("flex")], [
+						html.h1([attribute.class("text-lg font-bold mb-6 grow")], [html.text("Well Done!")]),
+						html.a([
+							event.on_click(ToggleResultPanel),
+							attribute.class("duration-200 active:translate-y-0.5 active:scale-95 text-lg font-bold cursor-pointer")
+						], [html.text("✕")])
+					]),
+					html.p([], [html.text("You scored " <> int.to_string(result.score) <> " out of " <> int.to_string(result.out_of))]),
+					html.p([attribute.class("mb-6")], [html.text(share_string(result.results))]),
+					html.p([attribute.class("mb-6")], [html.text("A new set of questions will appear at midnight.")]),
+				])
+			])
+		}
+		False -> html.div([], [])
+	}
 }
 
 fn calculate_results(questions: List(Question)) {
@@ -295,7 +310,10 @@ fn view(model: Model) {
           }))
         ])
       })),
-      button(model)
+      case model.submitted {
+			  True -> result_panel(model)
+        False -> button(model)
+			}
     ])
   ])
 }
