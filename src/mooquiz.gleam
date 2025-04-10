@@ -27,7 +27,7 @@ type QuizResult {
 }
 
 type Msg {
-	ReadAnswers
+	ReadAnswers(String)
   SubmitAnswers
   SelectAnswer(String)
   GotQuestions(Result(String, rsvp.Error))
@@ -58,7 +58,8 @@ fn init(_flags) -> #(Model, effect.Effect(Msg)) {
 
 fn update(model: Model, msg: Msg){
   case msg {
-	  ReadAnswers -> {
+	  ReadAnswers(answers) -> {
+		  io.debug(answers)
 		  #(model, effect.none())
 		}
     GotQuestions(Ok(file)) -> {
@@ -100,9 +101,8 @@ fn update(model: Model, msg: Msg){
             None)
         })
 
-      #(Model(title, False, questions), effect.none())
+      #(Model(title, False, questions), get_today())
     }
-    
     GotQuestions(Error(_)) -> {
       io.debug("Pulling failed")
       #(model, effect.none())
@@ -147,14 +147,22 @@ fn save_results(result: QuizResult) {
 	})
 }
 
-//fn read_today() {
-//  effect.from(fn(dispatch) {
-//	  case date_format |> get_localstorage |> dispatch {
-//		  Ok(result) -> result
-//			Error(Nil) -> ""
-//		}
-//	})
-//}
+fn get_today() {
+  effect.from(fn(dispatch) {
+		echo "Getting today's attempt"
+	  case get_localstorage(date_format()) {
+		  Ok(result) -> { 
+			  echo result
+				dispatch(ReadAnswers(result))
+				Nil
+			}
+			Error(_) -> {
+			  echo "Fuck"
+				Nil
+			}
+		}
+	})
+}
 
 fn encode_result(result: QuizResult) -> json.Json {
   json.object([
@@ -169,10 +177,10 @@ fn set_localstorage(_key: String, _value: String) -> Nil {
   Nil
 }
 
-//@external(javascript, "ffi.mjs", "get_localstorage")
-//fn get_localstorage(_key: String) -> Result(String, Nil) {
-//  Error(Nil)
-//}
+@external(javascript, "./app.ffi.mjs", "get_localstorage")
+fn get_localstorage(_key: String) -> Result(String, Nil) {
+  Error(Nil)
+}
 
 fn date_format() {
   tempo.format_local(tempo.Custom("YYYYMMDD"))
