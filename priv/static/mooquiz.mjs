@@ -5972,7 +5972,7 @@ function get_today() {
       let $ = get_localstorage(date_format());
       if ($.isOk()) {
         let result = $[0];
-        echo(result, "src/mooquiz.gleam", 184);
+        echo(result, "src/mooquiz.gleam", 192);
         dispatch(new ReadAnswers(result));
         return void 0;
       } else {
@@ -6021,7 +6021,7 @@ function calculate_results(questions) {
         throw makeError(
           "panic",
           "mooquiz",
-          275,
+          283,
           "",
           "Unfilled scored should never have been saved",
           {}
@@ -6060,14 +6060,13 @@ function share_results2(title, url, result) {
   let share_data = object2(
     toList([
       [
-        "title",
+        "text",
         string4(
           "I scored " + to_string(result.score) + "/" + to_string(
             result.out_of
-          ) + "  on " + title
+          ) + "  on " + title + "\n" + share_string(result.results)
         )
       ],
-      ["text", string4(share_string(result.results))],
       ["url", string4(url)]
     ])
   );
