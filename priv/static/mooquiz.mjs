@@ -5949,24 +5949,6 @@ function encode_result(result) {
     ])
   );
 }
-function share_results2(title, url, result) {
-  let share_data = object2(
-    toList([
-      [
-        "text",
-        string4(
-          "I scored " + to_string(result.score) + "/" + to_string(
-            result.out_of
-          ) + "  on " + title
-        )
-      ],
-      ["url", string4(url)]
-    ])
-  );
-  return from((_) => {
-    return share_results(share_data);
-  });
-}
 function date_format() {
   return format_local(new Custom("YYYYMMDD"));
 }
@@ -5990,7 +5972,7 @@ function get_today() {
       let $ = get_localstorage(date_format());
       if ($.isOk()) {
         let result = $[0];
-        echo(result, "src/mooquiz.gleam", 183);
+        echo(result, "src/mooquiz.gleam", 184);
         dispatch(new ReadAnswers(result));
         return void 0;
       } else {
@@ -6039,7 +6021,7 @@ function calculate_results(questions) {
         throw makeError(
           "panic",
           "mooquiz",
-          274,
+          275,
           "",
           "Unfilled scored should never have been saved",
           {}
@@ -6060,6 +6042,38 @@ function calculate_results(questions) {
     }
   );
   return new QuizResult(results, answers, score, out_of);
+}
+function share_string(results) {
+  let _pipe = map(
+    results,
+    (x) => {
+      if (!x) {
+        return "\u274C";
+      } else {
+        return "\u2714\uFE0F";
+      }
+    }
+  );
+  return join(_pipe, "");
+}
+function share_results2(title, url, result) {
+  let share_data = object2(
+    toList([
+      [
+        "title",
+        string4(
+          "I scored " + to_string(result.score) + "/" + to_string(
+            result.out_of
+          ) + "  on " + title
+        )
+      ],
+      ["text", string4(share_string(result.results))],
+      ["url", string4(url)]
+    ])
+  );
+  return from((_) => {
+    return share_results(share_data);
+  });
 }
 function update(model, msg) {
   if (msg instanceof ShareResults) {
@@ -6309,19 +6323,6 @@ function update(model, msg) {
       return [model, none()];
     }
   }
-}
-function share_string(results) {
-  let _pipe = map(
-    results,
-    (x) => {
-      if (!x) {
-        return "\u274C";
-      } else {
-        return "\u2714\uFE0F";
-      }
-    }
-  );
-  return join(_pipe, "");
 }
 function result_panel(model) {
   let $ = model.show_results;

@@ -168,8 +168,9 @@ fn save_results(result: QuizResult) {
 
 fn share_results(title: String, url: String, result: QuizResult) {
 	let share_data = json.object([
-		#("text", json.string("I scored " <> int.to_string(result.score) <> "/" <> int.to_string(result.out_of) <> "  on " <> title)),
-		#("url", json.string(url)),
+		#("title", json.string("I scored " <> int.to_string(result.score) <> "/" <> int.to_string(result.out_of) <> "  on " <> title)),
+		#("text", json.string(share_string(result.results))),
+		#("url", json.string(url))
 	])
   effect.from(fn(_dispatch) {
 	  share_results_js(share_data)
