@@ -27,6 +27,7 @@ type QuizResult {
 }
 
 type Msg {
+  ShareResults
   ReadAnswers(String)
   SubmitAnswers
   ToggleResultPanel
@@ -35,7 +36,7 @@ type Msg {
 }
 
 type Model {
-  Model(title: String, submitted: Bool, questions: List(Question), show_results: Bool)
+  Model(title: String, url: String, submitted: Bool, questions: List(Question), show_results: Bool)
 }
 
 pub fn main() {
@@ -48,6 +49,7 @@ pub fn main() {
 fn init(_flags) -> #(Model, effect.Effect(Msg)) {
   let model = Model(
     title: "Loading",
+		url: "",
     submitted: False,
     questions: [],
     show_results: True
@@ -60,6 +62,9 @@ fn init(_flags) -> #(Model, effect.Effect(Msg)) {
 
 fn update(model: Model, msg: Msg){
   case msg {
+	  ShareResults -> {
+		  #(model, share_results(model.title, model.url, calculate_results(model.questions)))
+		}
     ToggleResultPanel -> {
       #(Model(..model, show_results: !model.show_results), effect.none())
     }
@@ -121,7 +126,7 @@ fn update(model: Model, msg: Msg){
             None)
         })
 
-      #(Model(title: title, submitted: False, questions: questions, show_results: True), get_today())
+      #(Model(title: title, url: "https://mooquiz.pages.dev", submitted: False, questions: questions, show_results: True), get_today())
     }
     GotQuestions(Error(_)) -> #(model, effect.none())
     SubmitAnswers -> { 
@@ -161,6 +166,16 @@ fn save_results(result: QuizResult) {
   })
 }
 
+fn share_results(title: String, url: String, result: QuizResult) {
+	let share_data = json.object([
+		#("text", json.string("I scored " <> int.to_string(result.score) <> "/" <> int.to_string(result.out_of) <> "  on " <> title)),
+		#("url", json.string(url)),
+	])
+  effect.from(fn(_dispatch) {
+	  share_results_js(share_data)
+	})
+}
+
 fn get_today() {
   effect.from(fn(dispatch) {
     case get_localstorage(date_format()) {
@@ -181,6 +196,11 @@ fn encode_result(result: QuizResult) -> json.Json {
     #("score", json.int(result.score)),
     #("outOf", json.int(result.out_of)),
   ])
+}
+
+@external(javascript, "./app.ffi.mjs", "share_results")
+fn share_results_js(share_data: json.Json) -> Nil {
+  Nil
 }
 
 @external(javascript, "./app.ffi.mjs", "set_localstorage")
@@ -233,8 +253,14 @@ fn result_panel(model: Model) {
           html.p([], [html.text("You scored " <> int.to_string(result.score) <> " out of " <> int.to_string(result.out_of))]),
           html.p([attribute.class("mb-6")], [html.text(share_string(result.results))]),
           html.p([attribute.class("mb-6")], [html.text("A new set of questions will appear at midnight.")]),
-        ])
-      ])
+					html.div([],[html.button([
+					  event.on_click(ShareResults),
+						attribute.class("duration-200 border border-zinc-600 p-2 rounded-md active:translate-y-0.5 active:scale-95 border-zinc-600 bg-zinc-200")
+					  ],[
+						html.text("Share")
+					])])
+				])
+			])
     }
     False -> html.div([], [])
   }

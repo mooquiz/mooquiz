@@ -2546,6 +2546,9 @@ function parse(json, decoder) {
 function to_string2(json) {
   return json_to_string(json);
 }
+function string4(input2) {
+  return identity2(input2);
+}
 function bool2(input2) {
   return identity2(input2);
 }
@@ -5867,6 +5870,13 @@ function get_localstorage(key) {
 function set_localstorage(key, json) {
   window.localStorage.setItem(key, json);
 }
+function share_results(shareData) {
+  if (navigator.share) {
+    navigator.share(shareData).catch(console.error);
+  } else {
+    alert("Sharing not supported on this browser.");
+  }
+}
 
 // build/dev/javascript/mooquiz/mooquiz.mjs
 var Answer = class extends CustomType {
@@ -5895,6 +5905,8 @@ var QuizResult = class extends CustomType {
     this.out_of = out_of;
   }
 };
+var ShareResults = class extends CustomType {
+};
 var ReadAnswers = class extends CustomType {
   constructor(x0) {
     super();
@@ -5918,9 +5930,10 @@ var GotQuestions = class extends CustomType {
   }
 };
 var Model2 = class extends CustomType {
-  constructor(title, submitted, questions, show_results) {
+  constructor(title, url, submitted, questions, show_results) {
     super();
     this.title = title;
+    this.url = url;
     this.submitted = submitted;
     this.questions = questions;
     this.show_results = show_results;
@@ -5935,6 +5948,24 @@ function encode_result(result) {
       ["outOf", int3(result.out_of)]
     ])
   );
+}
+function share_results2(title, url, result) {
+  let share_data = object2(
+    toList([
+      [
+        "text",
+        string4(
+          "I scored " + to_string(result.score) + "/" + to_string(
+            result.out_of
+          ) + "  on " + title
+        )
+      ],
+      ["url", string4(url)]
+    ])
+  );
+  return from((_) => {
+    return share_results(share_data);
+  });
 }
 function date_format() {
   return format_local(new Custom("YYYYMMDD"));
@@ -5959,7 +5990,7 @@ function get_today() {
       let $ = get_localstorage(date_format());
       if ($.isOk()) {
         let result = $[0];
-        echo(result, "src/mooquiz.gleam", 168);
+        echo(result, "src/mooquiz.gleam", 183);
         dispatch(new ReadAnswers(result));
         return void 0;
       } else {
@@ -6008,7 +6039,7 @@ function calculate_results(questions) {
         throw makeError(
           "panic",
           "mooquiz",
-          248,
+          274,
           "",
           "Unfilled scored should never have been saved",
           {}
@@ -6031,12 +6062,18 @@ function calculate_results(questions) {
   return new QuizResult(results, answers, score, out_of);
 }
 function update(model, msg) {
-  if (msg instanceof ToggleResultPanel) {
+  if (msg instanceof ShareResults) {
+    return [
+      model,
+      share_results2(model.title, model.url, calculate_results(model.questions))
+    ];
+  } else if (msg instanceof ToggleResultPanel) {
     return [
       (() => {
         let _record = model;
         return new Model2(
           _record.title,
+          _record.url,
           _record.submitted,
           _record.questions,
           !model.show_results
@@ -6098,7 +6135,13 @@ function update(model, msg) {
       return [
         (() => {
           let _record = model;
-          return new Model2(_record.title, true, questions, _record.show_results);
+          return new Model2(
+            _record.title,
+            _record.url,
+            true,
+            questions,
+            _record.show_results
+          );
         })(),
         none()
       ];
@@ -6114,7 +6157,7 @@ function update(model, msg) {
       throw makeError(
         "let_assert",
         "mooquiz",
-        87,
+        92,
         "update",
         "Pattern match failed, no pattern matched the value.",
         { value: $ }
@@ -6130,7 +6173,7 @@ function update(model, msg) {
           throw makeError(
             "let_assert",
             "mooquiz",
-            89,
+            94,
             "",
             "Pattern match failed, no pattern matched the value.",
             { value: $1 }
@@ -6188,7 +6231,10 @@ function update(model, msg) {
         }
       );
     })();
-    return [new Model2(title, false, questions$2, true), get_today()];
+    return [
+      new Model2(title, "https://mooquiz.pages.dev", false, questions$2, true),
+      get_today()
+    ];
   } else if (msg instanceof GotQuestions && !msg[0].isOk()) {
     return [model, none()];
   } else if (msg instanceof SubmitAnswers) {
@@ -6201,6 +6247,7 @@ function update(model, msg) {
           let _record = model;
           return new Model2(
             _record.title,
+            _record.url,
             true,
             _record.questions,
             _record.show_results
@@ -6247,6 +6294,7 @@ function update(model, msg) {
             let _record = model;
             return new Model2(
               _record.title,
+              _record.url,
               _record.submitted,
               questions,
               _record.show_results
@@ -6329,6 +6377,20 @@ function result_panel(model) {
               toList([class$("mb-6")]),
               toList([
                 text2("A new set of questions will appear at midnight.")
+              ])
+            ),
+            div(
+              toList([]),
+              toList([
+                button(
+                  toList([
+                    on_click(new ShareResults()),
+                    class$(
+                      "duration-200 border border-zinc-600 p-2 rounded-md active:translate-y-0.5 active:scale-95 border-zinc-600 bg-zinc-200"
+                    )
+                  ]),
+                  toList([text2("Share")])
+                )
               ])
             )
           ])
@@ -6442,7 +6504,7 @@ function view(model) {
 }
 var questions_dir_url = "https://raw.githubusercontent.com/mooquiz/Questions/refs/heads/main/";
 function init2(_) {
-  let model = new Model2("Loading", false, toList([]), true);
+  let model = new Model2("Loading", "", false, toList([]), true);
   let questions_url = questions_dir_url + date_format() + ".txt";
   return [
     model,
@@ -6461,7 +6523,7 @@ function main2() {
     throw makeError(
       "let_assert",
       "mooquiz",
-      43,
+      44,
       "main",
       "Pattern match failed, no pattern matched the value.",
       { value: $ }

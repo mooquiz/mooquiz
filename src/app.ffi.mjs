@@ -22,3 +22,11 @@ export function get_localstorage(key) {
 export function set_localstorage(key, json) {
   window.localStorage.setItem(key, json);
 }
+
+export function share_results(shareData) {
+	 if (navigator.share) {
+    navigator.share(shareData).catch(console.error);
+  } else {
+    alert("Sharing not supported on this browser.");
+  }
+}
