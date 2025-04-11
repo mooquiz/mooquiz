@@ -232,15 +232,16 @@ fn unanswered_questions(model: Model) {
 }
 
 fn button(model: Model) { 
-  let classes = case unanswered_questions(model) {
-    True -> "bg-zinc-600 cursor-not-allowed"
-    False -> "active:translate-y-0.5 active:scale-95 border-zinc-600 bg-zinc-200"
-  }
-  html.button([
-    event.on_click(SubmitAnswers),
-    attribute.class("duration-200 border border-zinc-600 p-2 rounded-md " <> classes)
-  ], [html.text("Submit")])
+	let classes = case unanswered_questions(model) {
+		True -> "cursor-not-allowed text-zinc-300 border-zinc-300"
+		False -> "active:translate-y-0.5 active:scale-95 border-zinc-600 bg-zinc-200"
+	}
+	html.button([
+		event.on_click(SubmitAnswers),
+		attribute.class("duration-200 border p-2 rounded-md " <> classes)
+	], [html.text("Submit")])
 }
+
 
 fn result_panel(model: Model) {
   case model.show_results {
@@ -271,7 +272,14 @@ fn result_panel(model: Model) {
 				])
 			])
     }
-    False -> html.div([], [])
+    False -> {
+		  html.button([
+			  event.on_click(ToggleResultPanel),
+				attribute.class("duration-200 border p-2 rounded-md active:translate-y-0.5 active:scale-95 border-zinc-600 bg-zinc-200")
+			],[
+			  html.text("Show Results")
+			])
+		}
   }
 }
 

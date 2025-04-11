@@ -5993,7 +5993,7 @@ function button2(model) {
   let classes = (() => {
     let $ = unanswered_questions(model);
     if ($) {
-      return "bg-zinc-600 cursor-not-allowed";
+      return "cursor-not-allowed text-zinc-300 border-zinc-300";
     } else {
       return "active:translate-y-0.5 active:scale-95 border-zinc-600 bg-zinc-200";
     }
@@ -6001,9 +6001,7 @@ function button2(model) {
   return button(
     toList([
       on_click(new SubmitAnswers()),
-      class$(
-        "duration-200 border border-zinc-600 p-2 rounded-md " + classes
-      )
+      class$("duration-200 border p-2 rounded-md " + classes)
     ]),
     toList([text2("Submit")])
   );
@@ -6021,7 +6019,7 @@ function calculate_results(questions) {
         throw makeError(
           "panic",
           "mooquiz",
-          283,
+          291,
           "",
           "Unfilled scored should never have been saved",
           {}
@@ -6398,7 +6396,15 @@ function result_panel(model) {
       ])
     );
   } else {
-    return div(toList([]), toList([]));
+    return button(
+      toList([
+        on_click(new ToggleResultPanel()),
+        class$(
+          "duration-200 border p-2 rounded-md active:translate-y-0.5 active:scale-95 border-zinc-600 bg-zinc-200"
+        )
+      ]),
+      toList([text2("Show Results")])
+    );
   }
 }
 function answer_radio(question, answer, submitted) {
