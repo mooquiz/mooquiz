@@ -6466,7 +6466,7 @@ function view(model) {
         toList([class$("max-w-2xl mx-auto p-8")]),
         toList([
           h1(
-            toList([class$("text-xl font-bold mb-8")]),
+            toList([class$("text-xl font-bold mb-8 text-purple-800")]),
             toList([text2(model.title)])
           ),
           div(

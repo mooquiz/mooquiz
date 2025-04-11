@@ -344,7 +344,7 @@ fn answer_div(answer: Answer, question: Question, submitted: Bool) {
 fn view(model: Model) {
   html.div([], [
     html.main([attribute.class("max-w-2xl mx-auto p-8")], [
-      html.h1([attribute.class("text-xl font-bold mb-8")], [html.text(model.title)]),
+      html.h1([attribute.class("text-xl font-bold mb-8 text-purple-800")], [html.text(model.title)]),
       html.div([], list.map(model.questions, fn(q) { 
         html.div([attribute.class("mb-4")], [
           html.h2([attribute.class("text-lg font-semibold")], [html.text(q.text)]),
