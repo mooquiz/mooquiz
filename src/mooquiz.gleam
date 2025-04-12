@@ -328,7 +328,6 @@ fn answer_div(answer: Answer, question: Question, submitted: Bool) {
     False, True, _ -> "bg-selected"
     True, True, True, -> "bg-correct font-bold"
     True, True, False -> "bg-incorrect font-bold"
-    True, False, True -> "bg-correct"
     _, _, _ -> "bg-zinc-100 hover:bg-zinc-200 cursor-pointer"
   }
 

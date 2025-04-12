@@ -6449,8 +6449,6 @@ function answer_div(answer, question, submitted) {
       return "bg-correct font-bold";
     } else if (submitted && $ && !$1) {
       return "bg-incorrect font-bold";
-    } else if (submitted && !$ && $1) {
-      return "bg-correct";
     } else {
       return "bg-zinc-100 hover:bg-zinc-200 cursor-pointer";
     }
