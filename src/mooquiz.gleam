@@ -189,7 +189,6 @@ fn get_today() {
   effect.from(fn(dispatch) {
     case get_localstorage(date_format()) {
       Ok(result) -> { 
-        echo result
         dispatch(ReadAnswers(result))
         Nil
       }
