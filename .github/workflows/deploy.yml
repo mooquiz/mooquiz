@@ -8,6 +8,7 @@ on:
 jobs:
   deploy:
     name: Deploy to Cloudflare Pages
+    environment: production
     runs-on: ubuntu-latest
     permissions:
       contents: read
