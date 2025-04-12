@@ -6436,13 +6436,13 @@ function answer_div(answer, question, submitted) {
     let $ = isEqual(question.selected, new Some(answer.pos));
     let $1 = question.correct === answer.pos;
     if (!submitted && $) {
-      return "bg-blue-200";
+      return "bg-selected";
     } else if (submitted && $ && $1) {
-      return "bg-green-200 font-bold";
+      return "bg-correct font-bold";
     } else if (submitted && $ && !$1) {
-      return "bg-red-200 font-bold";
+      return "bg-incorrect font-bold";
     } else if (submitted && !$ && $1) {
-      return "bg-green-200";
+      return "bg-correct";
     } else {
       return "bg-zinc-100 hover:bg-zinc-200 cursor-pointer";
     }
@@ -6468,7 +6468,7 @@ function view(model) {
           h1(
             toList([
               class$(
-                "font-logo font-[800] text-shadow-lg shadow-zinc-200 text-5xl text-purple-800"
+                "font-logo font-[800] text-shadow-lg shadow-zinc-200 text-5xl text-head"
               )
             ]),
             toList([text2("POPQUIZZA")])
@@ -6479,19 +6479,21 @@ function view(model) {
         toList([]),
         toList([
           h1(
-            toList([class$("text-xl font-bold mb-8 text-purple-700")]),
+            toList([class$("text-xl font-bold mb-8 text-subhead")]),
             toList([text2(model.title)])
           ),
           div(
-            toList([class$("flex flex-col gap-4")]),
+            toList([class$("flex flex-col gap-6 mb-4")]),
             map(
               model.questions,
               (q) => {
                 return div(
-                  toList([class$("")]),
+                  toList([]),
                   toList([
                     h2(
-                      toList([class$("text-lg font-semibold")]),
+                      toList([
+                        class$("text-lg font-semibold text-question")
+                      ]),
                       toList([text2(q.text)])
                     ),
                     div(

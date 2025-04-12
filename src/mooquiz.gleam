@@ -325,10 +325,10 @@ fn answer_radio(question: Question, answer: Answer, submitted: Bool) {
 
 fn answer_div(answer: Answer, question: Question, submitted: Bool) {
   let bg = case submitted, question.selected == Some(answer.pos), question.correct == answer.pos { 
-    False, True, _ -> "bg-blue-200"
-    True, True, True, -> "bg-green-200 font-bold"
-    True, True, False -> "bg-red-200 font-bold"
-    True, False, True -> "bg-green-200"
+    False, True, _ -> "bg-selected"
+    True, True, True, -> "bg-correct font-bold"
+    True, True, False -> "bg-incorrect font-bold"
+    True, False, True -> "bg-correct"
     _, _, _ -> "bg-zinc-100 hover:bg-zinc-200 cursor-pointer"
   }
 
@@ -344,15 +344,15 @@ fn answer_div(answer: Answer, question: Question, submitted: Bool) {
 fn view(model: Model) {
   html.div([attribute.class("max-w-2xl mx-auto p-8")], [
 	  html.header([],[
-		  html.h1([attribute.class("font-logo font-[800] text-shadow-lg shadow-zinc-200 text-5xl text-purple-800")],[
+		  html.h1([attribute.class("font-logo font-[800] text-shadow-lg shadow-zinc-200 text-5xl text-head")],[
 			  html.text("POPQUIZZA")
 			])
 		]),
     html.main([], [
-      html.h1([attribute.class("text-xl font-bold mb-8 text-purple-700")], [html.text(model.title)]),
-      html.div([attribute.class("flex flex-col gap-4")], list.map(model.questions, fn(q) { 
-        html.div([attribute.class("")], [
-          html.h2([attribute.class("text-lg font-semibold")], [html.text(q.text)]),
+      html.h1([attribute.class("text-xl font-bold mb-8 text-subhead")], [html.text(model.title)]),
+      html.div([attribute.class("flex flex-col gap-6 mb-4")], list.map(model.questions, fn(q) { 
+        html.div([], [
+          html.h2([attribute.class("text-lg font-semibold text-question")], [html.text(q.text)]),
           html.div([attribute.class("flex flex-col gap-2")], list.map(q.answers, fn(answer) {
             answer_div(answer, q, model.submitted)
           }))
