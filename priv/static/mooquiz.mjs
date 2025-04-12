@@ -6052,7 +6052,7 @@ function share_string(results) {
       if (!x) {
         return "\u274C";
       } else {
-        return "\u2714\uFE0F";
+        return "\u2705";
       }
     }
   );

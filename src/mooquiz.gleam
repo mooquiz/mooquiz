@@ -300,7 +300,7 @@ fn share_string(results: List(Bool)) {
   list.map(results, fn(x) { 
     case x {
       False -> "❌"
-      True -> "✔️"
+      True -> "✅"
     }
   }) |> string.join("")
 } 
