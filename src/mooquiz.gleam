@@ -349,10 +349,10 @@ fn view(model: Model) {
 			])
 		]),
     html.main([], [
-      html.h2([attribute.class("text-xl font-bold mb-8 text-subhead")], [html.text(model.title)]),
+      html.h2([attribute.class("text-xl font-bold mb-8 text-head")], [html.text(model.title)]),
       html.div([attribute.class("flex flex-col gap-6 mb-4")], list.map(model.questions, fn(q) { 
         html.div([], [
-          html.h2([attribute.class("text-lg font-semibold text-question")], [html.text(q.text)]),
+          html.h2([attribute.class("text-lg font-semibold text-head")], [html.text(q.text)]),
           html.div([attribute.class("flex flex-col gap-2")], list.map(q.answers, fn(answer) {
             answer_div(answer, q, model.submitted)
           }))

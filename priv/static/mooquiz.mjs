@@ -6483,7 +6483,7 @@ function view(model) {
         toList([]),
         toList([
           h2(
-            toList([class$("text-xl font-bold mb-8 text-subhead")]),
+            toList([class$("text-xl font-bold mb-8 text-head")]),
             toList([text2(model.title)])
           ),
           div(
@@ -6496,7 +6496,7 @@ function view(model) {
                   toList([
                     h2(
                       toList([
-                        class$("text-lg font-semibold text-question")
+                        class$("text-lg font-semibold text-head")
                       ]),
                       toList([text2(q.text)])
                     ),
