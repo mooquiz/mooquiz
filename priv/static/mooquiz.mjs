@@ -6460,13 +6460,26 @@ function answer_div(answer, question, submitted) {
 }
 function view(model) {
   return div(
-    toList([]),
+    toList([class$("max-w-2xl mx-auto p-8")]),
     toList([
-      main(
-        toList([class$("max-w-2xl mx-auto p-8")]),
+      header(
+        toList([]),
         toList([
           h1(
-            toList([class$("text-xl font-bold mb-8 text-purple-800")]),
+            toList([
+              class$(
+                "font-logo font-[800] text-shadow-lg shadow-zinc-200 text-5xl text-purple-800"
+              )
+            ]),
+            toList([text2("POPQUIZZA")])
+          )
+        ])
+      ),
+      main(
+        toList([class$("")]),
+        toList([
+          h1(
+            toList([class$("text-xl font-bold mb-8 text-purple-700")]),
             toList([text2(model.title)])
           ),
           div(

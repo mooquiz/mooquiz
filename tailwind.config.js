@@ -4,6 +4,7 @@ module.exports = {
     extend: {
 			fontFamily: {
 				sans: ['Inter', 'ui-sans-serif', 'system-ui'],
+				logo: ['Anybody', 'ui-sans-serif',' system-ui'],
 			},
 		},
   },

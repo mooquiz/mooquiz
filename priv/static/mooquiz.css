@@ -702,8 +702,17 @@ video {
   padding: 2rem;
 }
 
+.font-logo {
+  font-family: Anybody, ui-sans-serif,  system-ui;
+}
+
 .font-sans {
   font-family: Inter, ui-sans-serif, system-ui;
+}
+
+.text-5xl {
+  font-size: 3rem;
+  line-height: 1;
 }
 
 .text-lg {
@@ -714,6 +723,10 @@ video {
 .text-xl {
   font-size: 1.25rem;
   line-height: 1.75rem;
+}
+
+.font-\[800\] {
+  font-weight: 800;
 }
 
 .font-bold {
@@ -729,6 +742,11 @@ video {
   color: rgb(17 24 39 / var(--tw-text-opacity));
 }
 
+.text-purple-700 {
+  --tw-text-opacity: 1;
+  color: rgb(126 34 206 / var(--tw-text-opacity));
+}
+
 .text-purple-800 {
   --tw-text-opacity: 1;
   color: rgb(107 33 168 / var(--tw-text-opacity));
@@ -742,6 +760,11 @@ video {
 .antialiased {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.shadow-zinc-200 {
+  --tw-shadow-color: #e4e4e7;
+  --tw-shadow: var(--tw-shadow-colored);
 }
 
 .backdrop-blur-sm {
