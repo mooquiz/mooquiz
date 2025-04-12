@@ -6247,7 +6247,7 @@ function update(model, msg) {
       );
     })();
     return [
-      new Model2(title, "https://mooquiz.pages.dev", false, questions$2, true),
+      new Model2(title, "https://popquizza.com", false, questions$2, true),
       get_today()
     ];
   } else if (msg instanceof GotQuestions && !msg[0].isOk()) {

@@ -126,7 +126,7 @@ fn update(model: Model, msg: Msg){
             None)
         })
 
-      #(Model(title: title, url: "https://mooquiz.pages.dev", submitted: False, questions: questions, show_results: True), get_today())
+      #(Model(title: title, url: "https://popquizza.com", submitted: False, questions: questions, show_results: True), get_today())
     }
     GotQuestions(Error(_)) -> #(model, effect.none())
     SubmitAnswers -> { 
