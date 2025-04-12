@@ -6343,7 +6343,11 @@ function result_panel(model) {
               toList([class$("flex")]),
               toList([
                 h1(
-                  toList([class$("text-lg font-bold mb-6 grow")]),
+                  toList([
+                    class$(
+                      "text-xl font-logo text-head font-extrabold mb-6 grow"
+                    )
+                  ]),
                   toList([text2("Well Done!")])
                 ),
                 a(
@@ -6478,7 +6482,7 @@ function view(model) {
       main(
         toList([]),
         toList([
-          h1(
+          h2(
             toList([class$("text-xl font-bold mb-8 text-subhead")]),
             toList([text2(model.title)])
           ),
