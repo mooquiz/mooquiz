@@ -23,10 +23,11 @@ export function set_localstorage(key, json) {
   window.localStorage.setItem(key, json);
 }
 
-export function share_results(shareData) {
-	 if (navigator.share) {
+export async function share_results(shareData) {
+	 if (navigator.share && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
     navigator.share(shareData).catch(console.error);
   } else {
-    alert("Sharing not supported on this browser.");
+    await navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`);
+    alert("Data copied to clipboard")
   }
 }

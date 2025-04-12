@@ -4544,6 +4544,9 @@ function h1(attrs, children2) {
 function h2(attrs, children2) {
   return element("h2", attrs, children2);
 }
+function h3(attrs, children2) {
+  return element("h3", attrs, children2);
+}
 function main(attrs, children2) {
   return element("main", attrs, children2);
 }
@@ -5870,11 +5873,12 @@ function get_localstorage(key) {
 function set_localstorage(key, json) {
   window.localStorage.setItem(key, json);
 }
-function share_results(shareData) {
-  if (navigator.share) {
+async function share_results(shareData) {
+  if (navigator.share && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
     navigator.share(shareData).catch(console.error);
   } else {
-    alert("Sharing not supported on this browser.");
+    await navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`);
+    alert("Data copied to clipboard");
   }
 }
 
@@ -6483,7 +6487,7 @@ function view(model) {
         toList([]),
         toList([
           h2(
-            toList([class$("text-xl font-bold mb-8 text-head")]),
+            toList([class$("text-xl font-bold mb-8 text-subhead")]),
             toList([text2(model.title)])
           ),
           div(
@@ -6494,7 +6498,7 @@ function view(model) {
                 return div(
                   toList([]),
                   toList([
-                    h2(
+                    h3(
                       toList([
                         class$("text-lg font-semibold text-head")
                       ]),

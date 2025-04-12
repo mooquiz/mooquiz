@@ -750,6 +750,11 @@ video {
   color: rgb(126 34 206 / var(--tw-text-opacity));
 }
 
+.text-subhead {
+  --tw-text-opacity: 1;
+  color: rgb(3 105 161 / var(--tw-text-opacity));
+}
+
 .text-zinc-300 {
   --tw-text-opacity: 1;
   color: rgb(212 212 216 / var(--tw-text-opacity));
