@@ -3,8 +3,8 @@ module.exports = {
   theme: {
     extend: {
 			fontFamily: {
-				sans: ['Inter', 'ui-sans-serif', 'system-ui'],
-				logo: ['Anybody', 'ui-sans-serif',' system-ui'],
+				sans: ['Inter', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+				logo: ['Anybody', 'Fredoka', 'Poppins', 'Arial Rounded MT Bold', 'Arial', 'sans-serif'],
 			},
       colors: {
         "correct": "#BBF7D0",
