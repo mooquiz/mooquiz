@@ -6444,7 +6444,7 @@ function answer_div(answer, question, submitted) {
     } else if (submitted && !$ && $1) {
       return "bg-green-200";
     } else {
-      return "bg-zinc-100";
+      return "bg-zinc-100 hover:bg-zinc-200 cursor-pointer";
     }
   })();
   return label(
@@ -6476,19 +6476,19 @@ function view(model) {
         ])
       ),
       main(
-        toList([class$("")]),
+        toList([]),
         toList([
           h1(
             toList([class$("text-xl font-bold mb-8 text-purple-700")]),
             toList([text2(model.title)])
           ),
           div(
-            toList([]),
+            toList([class$("flex flex-col gap-4")]),
             map(
               model.questions,
               (q) => {
                 return div(
-                  toList([class$("mb-4")]),
+                  toList([class$("")]),
                   toList([
                     h2(
                       toList([class$("text-lg font-semibold")]),

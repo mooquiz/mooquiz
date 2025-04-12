@@ -329,7 +329,7 @@ fn answer_div(answer: Answer, question: Question, submitted: Bool) {
     True, True, True, -> "bg-green-200 font-bold"
     True, True, False -> "bg-red-200 font-bold"
     True, False, True -> "bg-green-200"
-    _, _, _ -> "bg-zinc-100"
+    _, _, _ -> "bg-zinc-100 hover:bg-zinc-200 cursor-pointer"
   }
 
   html.label(
@@ -348,10 +348,10 @@ fn view(model: Model) {
 			  html.text("POPQUIZZA")
 			])
 		]),
-    html.main([attribute.class("")], [
+    html.main([], [
       html.h1([attribute.class("text-xl font-bold mb-8 text-purple-700")], [html.text(model.title)]),
-      html.div([], list.map(model.questions, fn(q) { 
-        html.div([attribute.class("mb-4")], [
+      html.div([attribute.class("flex flex-col gap-4")], list.map(model.questions, fn(q) { 
+        html.div([attribute.class("")], [
           html.h2([attribute.class("text-lg font-semibold")], [html.text(q.text)]),
           html.div([attribute.class("flex flex-col gap-2")], list.map(q.answers, fn(answer) {
             answer_div(answer, q, model.submitted)
