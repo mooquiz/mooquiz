@@ -2,3 +2,5 @@
 *.ez
 /build
 erl_crash.dump
+priv/static/mooquiz.mjs
+priv/static/mooquiz.css
