@@ -4,6 +4,7 @@ import lustre/event
 import lustre/effect
 import lustre/attribute
 import tempo
+import tempo/date
 import gleam/option.{type Option, Some, None}
 import gleam/string
 import gleam/dynamic/decode
@@ -13,6 +14,7 @@ import gleam/int
 import rsvp
 
 const questions_dir_url = "https://raw.githubusercontent.com/mooquiz/Questions/refs/heads/main/"
+const launch_date = "2025-04-19"
 
 type Answer {
   Answer(pos: Int, text: String)
@@ -36,7 +38,7 @@ type Msg {
 }
 
 type Model {
-  Model(title: String, url: String, submitted: Bool, questions: List(Question), show_results: Bool)
+  Model(title: String, url: String, submitted: Bool, questions: List(Question), show_results: Bool, date: tempo.Date, launch_date: tempo.Date)
 }
 
 pub fn main() {
@@ -49,13 +51,15 @@ pub fn main() {
 fn init(_flags) -> #(Model, effect.Effect(Msg)) {
   let model = Model(
     title: "Loading",
-		url: "",
+		url: "popquizza.com",
     submitted: False,
     questions: [],
-    show_results: True
+    show_results: True,
+    date: date.current_local(),
+    launch_date: date.literal(launch_date)
   )
 
-  let questions_url = questions_dir_url <> date_format() <> ".txt"
+  let questions_url = questions_dir_url <> date_format(model.date) <> ".txt"
 
   #(model, rsvp.get(questions_url, rsvp.expect_text(GotQuestions)))
 } 
@@ -126,13 +130,13 @@ fn update(model: Model, msg: Msg){
             None)
         })
 
-      #(Model(title: title, url: "https://popquizza.com", submitted: False, questions: questions, show_results: True), get_today())
+      #(Model(..model, title: title, questions: questions), get_today(model))
     }
     GotQuestions(Error(_)) -> #(model, effect.none())
     SubmitAnswers -> { 
       case unanswered_questions(model) {
         True -> #(model, effect.none())
-        False -> #(Model(..model, submitted: True), save_results(calculate_results(model.questions)))
+        False -> #(Model(..model, submitted: True), save_results(model))
       }
     }
     SelectAnswer(value) -> {
@@ -160,9 +164,15 @@ fn update(model: Model, msg: Msg){
   }
 }
 
-fn save_results(result: QuizResult) {
+fn save_results(model: Model) {
   effect.from(fn(_dispatch) {
-    set_localstorage(date_format(), result |> encode_result |> json.to_string)
+    set_localstorage(
+      date_format(model.date),
+      model.questions 
+      |> calculate_results() 
+      |> encode_result() 
+      |> json.to_string
+    )
   })
 }
 
@@ -185,9 +195,9 @@ fn share_results(title: String, url: String, result: QuizResult) {
 	})
 }
 
-fn get_today() {
+fn get_today(model: Model) {
   effect.from(fn(dispatch) {
-    case get_localstorage(date_format()) {
+    case get_localstorage(date_format(model.date)) {
       Ok(result) -> { 
         dispatch(ReadAnswers(result))
         Nil
@@ -221,8 +231,8 @@ fn get_localstorage(_key: String) -> Result(String, Nil) {
   Error(Nil)
 }
 
-fn date_format() {
-  tempo.format_local(tempo.Custom("YYYYMMDD"))
+fn date_format(date: tempo.Date) {
+  date |> date.to_string |> string.replace("-", "")
 }
 
 
@@ -339,6 +349,12 @@ fn answer_div(answer: Answer, question: Question, submitted: Bool) {
   )
 }
 
+fn round(model: Model) {
+  model.launch_date
+  |> date.difference(model.date)
+  |> int.to_string
+}
+
 fn view(model: Model) {
   html.div([attribute.class("max-w-2xl mx-auto p-8")], [
 	  html.header([],[
@@ -347,7 +363,7 @@ fn view(model: Model) {
 			])
 		]),
     html.main([], [
-      html.h2([attribute.class("text-xl font-bold mb-8 text-subhead")], [html.text(model.title)]),
+      html.h2([attribute.class("text-xl font-bold mb-8 text-subhead")], [html.text(round(model) <> ". " <> model.title)]),
       html.div([attribute.class("flex flex-col gap-6 mb-4")], list.map(model.questions, fn(q) { 
         html.div([], [
           html.h3([attribute.class("text-lg font-semibold text-head")], [html.text(q.text)]),

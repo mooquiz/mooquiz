@@ -504,6 +504,32 @@ function map_loop(loop$list, loop$fun, loop$acc) {
 function map(list3, fun) {
   return map_loop(list3, fun, toList([]));
 }
+function try_map_loop(loop$list, loop$fun, loop$acc) {
+  while (true) {
+    let list3 = loop$list;
+    let fun = loop$fun;
+    let acc = loop$acc;
+    if (list3.hasLength(0)) {
+      return new Ok(reverse(acc));
+    } else {
+      let first$1 = list3.head;
+      let rest$1 = list3.tail;
+      let $ = fun(first$1);
+      if ($.isOk()) {
+        let first$2 = $[0];
+        loop$list = rest$1;
+        loop$fun = fun;
+        loop$acc = prepend(first$2, acc);
+      } else {
+        let error = $[0];
+        return new Error(error);
+      }
+    }
+  }
+}
+function try_map(list3, fun) {
+  return try_map_loop(list3, fun, toList([]));
+}
 function append_loop(loop$first, loop$second) {
   while (true) {
     let first2 = loop$first;
@@ -710,12 +736,26 @@ function unwrap_both(result) {
     return a2;
   }
 }
+function all(results) {
+  return try_map(results, (x) => {
+    return x;
+  });
+}
 function replace_error(result, error) {
   if (result.isOk()) {
     let x = result[0];
     return new Ok(x);
   } else {
     return new Error(error);
+  }
+}
+function try_recover(result, fun) {
+  if (result.isOk()) {
+    let value3 = result[0];
+    return new Ok(value3);
+  } else {
+    let error = result[0];
+    return fun(error);
   }
 }
 
@@ -2291,72 +2331,6 @@ function array2(entries, inner_type) {
   return preprocessed_array(_pipe$1);
 }
 
-// build/dev/javascript/gleam_regexp/gleam_regexp_ffi.mjs
-function compile(pattern, options) {
-  try {
-    let flags = "gu";
-    if (options.case_insensitive) flags += "i";
-    if (options.multi_line) flags += "m";
-    return new Ok(new RegExp(pattern, flags));
-  } catch (error) {
-    const number = (error.columnNumber || 0) | 0;
-    return new Error(new CompileError(error.message, number));
-  }
-}
-function scan(regex, string5) {
-  regex.lastIndex = 0;
-  const matches = Array.from(string5.matchAll(regex)).map((match) => {
-    const content = match[0];
-    return new Match(content, submatches(match.slice(1)));
-  });
-  return List.fromArray(matches);
-}
-function submatches(groups) {
-  const submatches2 = [];
-  for (let n = groups.length - 1; n >= 0; n--) {
-    if (groups[n]) {
-      submatches2[n] = new Some(groups[n]);
-      continue;
-    }
-    if (submatches2.length > 0) {
-      submatches2[n] = new None();
-    }
-  }
-  return List.fromArray(submatches2);
-}
-
-// build/dev/javascript/gleam_regexp/gleam/regexp.mjs
-var Match = class extends CustomType {
-  constructor(content, submatches2) {
-    super();
-    this.content = content;
-    this.submatches = submatches2;
-  }
-};
-var CompileError = class extends CustomType {
-  constructor(error, byte_index) {
-    super();
-    this.error = error;
-    this.byte_index = byte_index;
-  }
-};
-var Options = class extends CustomType {
-  constructor(case_insensitive, multi_line) {
-    super();
-    this.case_insensitive = case_insensitive;
-    this.multi_line = multi_line;
-  }
-};
-function compile2(pattern, options) {
-  return compile(pattern, options);
-}
-function from_string(pattern) {
-  return compile2(pattern, new Options(false, false));
-}
-function scan2(regexp, string5) {
-  return scan(regexp, string5);
-}
-
 // build/dev/javascript/gleam_stdlib/gleam/bool.mjs
 function guard(requirement, consequence, alternative) {
   if (requirement) {
@@ -2425,23 +2399,49 @@ function div_with_remainder(a2, b) {
   return [floor_div(a2, b), modulo_unwrap(a2, b)];
 }
 var day_microseconds = 864e8;
-var hour_microseconds = 36e8;
-var minute_microseconds = 6e7;
-var second_microseconds = 1e6;
+
+// build/dev/javascript/gtempo/tempo/error.mjs
+var DateInvalidFormat = class extends CustomType {
+  constructor(input2) {
+    super();
+    this.input = input2;
+  }
+};
+var DateOutOfBounds = class extends CustomType {
+  constructor(input2, cause) {
+    super();
+    this.input = input2;
+    this.cause = cause;
+  }
+};
+var DateDayOutOfBounds = class extends CustomType {
+  constructor(input2) {
+    super();
+    this.input = input2;
+  }
+};
+var DateMonthOutOfBounds = class extends CustomType {
+  constructor(input2) {
+    super();
+    this.input = input2;
+  }
+};
+var DateYearOutOfBounds = class extends CustomType {
+  constructor(input2) {
+    super();
+    this.input = input2;
+  }
+};
 
 // build/dev/javascript/gtempo/tempo_ffi.mjs
 var speedup = 1;
 var referenceTime = 0;
 var referenceStart = 0;
-var referenceMonotonicStart = 0;
 var mockTime = false;
 var freezeTime = false;
 var warpTime = 0;
 function warped_now() {
   return Date.now() * 1e3 + warpTime;
-}
-function warped_now_monotonic() {
-  return Math.trunc(performance.now() * 1e3) + warpTime;
 }
 function now() {
   if (freezeTime) {
@@ -2456,45 +2456,8 @@ function now() {
 function local_offset() {
   return -(/* @__PURE__ */ new Date()).getTimezoneOffset();
 }
-function now_monotonic() {
-  if (freezeTime) {
-    return referenceTime + warpTime;
-  } else if (mockTime) {
-    let realElapsed = warped_now_monotonic() - referenceMonotonicStart;
-    let spedupElapsed = Math.trunc(realElapsed * speedup);
-    return referenceTime + spedupElapsed;
-  }
-  return warped_now_monotonic();
-}
-var unique = 1;
-function now_unique() {
-  return unique++;
-}
 
 // build/dev/javascript/gtempo/tempo.mjs
-var Instant = class extends CustomType {
-  constructor(timestamp_utc_us, offset_local_us, monotonic_us, unique2) {
-    super();
-    this.timestamp_utc_us = timestamp_utc_us;
-    this.offset_local_us = offset_local_us;
-    this.monotonic_us = monotonic_us;
-    this.unique = unique2;
-  }
-};
-var DateTime = class extends CustomType {
-  constructor(date, time, offset) {
-    super();
-    this.date = date;
-    this.time = time;
-    this.offset = offset;
-  }
-};
-var Offset = class extends CustomType {
-  constructor(minutes2) {
-    super();
-    this.minutes = minutes2;
-  }
-};
 var Date3 = class extends CustomType {
   constructor(unix_days) {
     super();
@@ -2508,237 +2471,11 @@ var MonthYear = class extends CustomType {
     this.year = year;
   }
 };
-var TimeOfDay = class extends CustomType {
-  constructor(microseconds) {
-    super();
-    this.microseconds = microseconds;
-  }
-};
-var LastInstantOfDay = class extends CustomType {
-};
-var ISO8601Seconds = class extends CustomType {
-};
-var ISO8601Milli = class extends CustomType {
-};
-var ISO8601Micro = class extends CustomType {
-};
-var HTTP = class extends CustomType {
-};
-var Custom = class extends CustomType {
-  constructor(format2) {
-    super();
-    this.format = format2;
-  }
-};
-var DateFormat = class extends CustomType {
-  constructor(x0) {
-    super();
-    this[0] = x0;
-  }
-};
-var TimeFormat = class extends CustomType {
-  constructor(x0) {
-    super();
-    this[0] = x0;
-  }
-};
-var ISO8601Date = class extends CustomType {
-};
-var CustomDate = class extends CustomType {
-  constructor(format2) {
-    super();
-    this.format = format2;
-  }
-};
-var CustomDateLocalised = class extends CustomType {
-  constructor(format2, locale) {
-    super();
-    this.format = format2;
-    this.locale = locale;
-  }
-};
-var ISO8601TimeSeconds = class extends CustomType {
-};
-var ISO8601TimeMilli = class extends CustomType {
-};
-var ISO8601TimeMicro = class extends CustomType {
-};
-var CustomTime = class extends CustomType {
-  constructor(format2) {
-    super();
-    this.format = format2;
-  }
-};
-var CustomTimeLocalised = class extends CustomType {
-  constructor(format2, locale) {
-    super();
-    this.format = format2;
-    this.locale = locale;
-  }
-};
-function offset_get_minutes(offset) {
-  return offset.minutes;
-}
-function offset_to_string(offset) {
-  let $ = (() => {
-    let $1 = divideInt(offset_get_minutes(offset), 60);
-    if ($1 <= 0) {
-      let h = $1;
-      return [true, -h];
-    } else {
-      let h = $1;
-      return [false, h];
-    }
-  })();
-  let is_negative = $[0];
-  let hours = $[1];
-  let mins = (() => {
-    let $1 = remainderInt(offset_get_minutes(offset), 60);
-    if ($1 < 0) {
-      let m = $1;
-      return -m;
-    } else {
-      let m = $1;
-      return m;
-    }
-  })();
-  if (hours === 0 && mins === 0) {
-    return "+00:00";
-  } else if (hours === 0) {
-    let m = mins;
-    return "-00:" + (() => {
-      let _pipe = to_string(m);
-      return pad_start(_pipe, 2, "0");
-    })();
-  } else if (is_negative) {
-    let h = hours;
-    let m = mins;
-    return "-" + (() => {
-      let _pipe = to_string(h);
-      return pad_start(_pipe, 2, "0");
-    })() + ":" + (() => {
-      let _pipe = to_string(m);
-      return pad_start(_pipe, 2, "0");
-    })();
-  } else {
-    let h = hours;
-    let m = mins;
-    return "+" + (() => {
-      let _pipe = to_string(h);
-      return pad_start(_pipe, 2, "0");
-    })() + ":" + (() => {
-      let _pipe = to_string(m);
-      return pad_start(_pipe, 2, "0");
-    })();
-  }
-}
-function offset_replace_format(content, offset) {
-  if (content === "z") {
-    let $ = offset.minutes;
-    if ($ === 0) {
-      return "Z";
-    } else {
-      let str_offset = (() => {
-        let _pipe = offset;
-        return offset_to_string(_pipe);
-      })();
-      let $1 = (() => {
-        let _pipe = str_offset;
-        return split2(_pipe, ":");
-      })();
-      if ($1.hasLength(2) && $1.tail.head === "00") {
-        let hours = $1.head;
-        return hours;
-      } else {
-        return str_offset;
-      }
-    }
-  } else if (content === "zz") {
-    let $ = offset.minutes;
-    if ($ === 0) {
-      return "Z";
-    } else {
-      let _pipe = offset;
-      return offset_to_string(_pipe);
-    }
-  } else if (content === "Z") {
-    let _pipe = offset;
-    return offset_to_string(_pipe);
-  } else if (content === "ZZ") {
-    let _pipe = offset;
-    let _pipe$1 = offset_to_string(_pipe);
-    return replace(_pipe$1, ":", "");
-  } else {
-    return content;
-  }
-}
 function date_from_unix_micro(unix_micro) {
   return new Date3(divideInt(unix_micro, day_microseconds));
 }
-function instant_as_utc_date(instant) {
-  return date_from_unix_micro(instant.timestamp_utc_us);
-}
-function instant_as_local_date(instant) {
-  return date_from_unix_micro(
-    instant.timestamp_utc_us + instant.offset_local_us
-  );
-}
-function date_to_day_of_week_number(date) {
-  return remainderInt(date.unix_days + 4, 7);
-}
-function date_to_day_of_week_short(date) {
-  let $ = date_to_day_of_week_number(date);
-  if ($ === 0) {
-    return "Sun";
-  } else if ($ === 1) {
-    return "Mon";
-  } else if ($ === 2) {
-    return "Tue";
-  } else if ($ === 3) {
-    return "Wed";
-  } else if ($ === 4) {
-    return "Thu";
-  } else if ($ === 5) {
-    return "Fri";
-  } else if ($ === 6) {
-    return "Sat";
-  } else {
-    throw makeError(
-      "panic",
-      "tempo",
-      1665,
-      "date_to_day_of_week_short",
-      "Invalid day of week found after modulo by 7",
-      {}
-    );
-  }
-}
-function date_to_day_of_week_long(date) {
-  let $ = date_to_day_of_week_number(date);
-  if ($ === 0) {
-    return "Sunday";
-  } else if ($ === 1) {
-    return "Monday";
-  } else if ($ === 2) {
-    return "Tuesday";
-  } else if ($ === 3) {
-    return "Wednesday";
-  } else if ($ === 4) {
-    return "Thursday";
-  } else if ($ === 5) {
-    return "Friday";
-  } else if ($ === 6) {
-    return "Saturday";
-  } else {
-    throw makeError(
-      "panic",
-      "tempo",
-      1678,
-      "date_to_day_of_week_long",
-      "Invalid day of week found after modulo by 7",
-      {}
-    );
-  }
+function date_days_apart(start_date, end_date) {
+  return end_date.unix_days - start_date.unix_days;
 }
 function date_days_before_year(year1) {
   let year = year1 - 1;
@@ -2829,33 +2566,6 @@ function month_to_short_string(month) {
     return "Nov";
   } else {
     return "Dec";
-  }
-}
-function month_to_long_string(month) {
-  if (month instanceof January) {
-    return "January";
-  } else if (month instanceof February) {
-    return "February";
-  } else if (month instanceof March) {
-    return "March";
-  } else if (month instanceof April) {
-    return "April";
-  } else if (month instanceof May) {
-    return "May";
-  } else if (month instanceof June) {
-    return "June";
-  } else if (month instanceof July) {
-    return "July";
-  } else if (month instanceof August) {
-    return "August";
-  } else if (month instanceof September) {
-    return "September";
-  } else if (month instanceof October) {
-    return "October";
-  } else if (month instanceof November) {
-    return "November";
-  } else {
-    return "December";
   }
 }
 function is_leap_year(year) {
@@ -2952,243 +2662,8 @@ function do_calculate_rata_die(loop$year, loop$month, loop$ordinal_day) {
     }
   }
 }
-function time_normalise(time) {
-  if (time instanceof TimeOfDay && time.microseconds < 0) {
-    let microseconds = time.microseconds;
-    return new TimeOfDay(
-      day_microseconds + remainderInt(
-        microseconds,
-        day_microseconds
-      )
-    );
-  } else if (time instanceof TimeOfDay && time.microseconds >= day_microseconds) {
-    let microseconds = time.microseconds;
-    return new TimeOfDay(remainderInt(microseconds, day_microseconds));
-  } else {
-    return time;
-  }
-}
-function time_from_microseconds(microseconds) {
-  return new TimeOfDay(microseconds);
-}
-function time_get_hour(time) {
-  let $ = time_normalise(time);
-  if ($ instanceof TimeOfDay) {
-    let microseconds = $.microseconds;
-    return divideInt(microseconds, hour_microseconds);
-  } else if ($ instanceof LastInstantOfDay) {
-    return 24;
-  } else {
-    return 23;
-  }
-}
-function time_get_minute(time) {
-  let $ = time_normalise(time);
-  if ($ instanceof TimeOfDay) {
-    let microseconds = $.microseconds;
-    let hour = divideInt(microseconds, hour_microseconds);
-    return divideInt(
-      microseconds - hour * hour_microseconds,
-      minute_microseconds
-    );
-  } else if ($ instanceof LastInstantOfDay) {
-    return 0;
-  } else {
-    return 59;
-  }
-}
-function time_get_second(time) {
-  let $ = time_normalise(time);
-  if ($ instanceof TimeOfDay) {
-    let microseconds = $.microseconds;
-    let hour = divideInt(microseconds, hour_microseconds);
-    let minute = divideInt(
-      microseconds - hour * hour_microseconds,
-      minute_microseconds
-    );
-    return divideInt(
-      microseconds - hour * hour_microseconds - minute * minute_microseconds,
-      second_microseconds
-    );
-  } else if ($ instanceof LastInstantOfDay) {
-    return 0;
-  } else {
-    return 60;
-  }
-}
-function time_get_micro(time) {
-  let $ = time_normalise(time);
-  if ($ instanceof TimeOfDay) {
-    let microseconds = $.microseconds;
-    let hour = divideInt(microseconds, hour_microseconds);
-    let minute = divideInt(
-      microseconds - hour * hour_microseconds,
-      minute_microseconds
-    );
-    let second = divideInt(
-      microseconds - hour * hour_microseconds - minute * minute_microseconds,
-      second_microseconds
-    );
-    return microseconds - hour * hour_microseconds - minute * minute_microseconds - second * second_microseconds;
-  } else if ($ instanceof LastInstantOfDay) {
-    return 0;
-  } else {
-    let microsecond = $.microseconds;
-    return microsecond;
-  }
-}
-function time_replace_format(content, time) {
-  if (content === "H") {
-    let _pipe = time_get_hour(time);
-    return to_string(_pipe);
-  } else if (content === "HH") {
-    let _pipe = time_get_hour(time);
-    let _pipe$1 = to_string(_pipe);
-    return pad_start(_pipe$1, 2, "0");
-  } else if (content === "h") {
-    let _pipe = (() => {
-      let $ = time_get_hour(time);
-      if ($ === 0) {
-        let hour = $;
-        return 12;
-      } else if ($ > 12) {
-        let hour = $;
-        return hour - 12;
-      } else {
-        let hour = $;
-        return hour;
-      }
-    })();
-    return to_string(_pipe);
-  } else if (content === "hh") {
-    let _pipe = (() => {
-      let $ = time_get_hour(time);
-      if ($ === 0) {
-        let hour = $;
-        return 12;
-      } else if ($ > 12) {
-        let hour = $;
-        return hour - 12;
-      } else {
-        let hour = $;
-        return hour;
-      }
-    })();
-    let _pipe$1 = to_string(_pipe);
-    return pad_start(_pipe$1, 2, "0");
-  } else if (content === "a") {
-    let $ = time_get_hour(time) >= 12;
-    if ($) {
-      return "pm";
-    } else {
-      return "am";
-    }
-  } else if (content === "A") {
-    let $ = time_get_hour(time) >= 12;
-    if ($) {
-      return "PM";
-    } else {
-      return "AM";
-    }
-  } else if (content === "m") {
-    let _pipe = time_get_minute(time);
-    return to_string(_pipe);
-  } else if (content === "mm") {
-    let _pipe = time_get_minute(time);
-    let _pipe$1 = to_string(_pipe);
-    return pad_start(_pipe$1, 2, "0");
-  } else if (content === "s") {
-    let _pipe = time_get_second(time);
-    return to_string(_pipe);
-  } else if (content === "ss") {
-    let _pipe = time_get_second(time);
-    let _pipe$1 = to_string(_pipe);
-    return pad_start(_pipe$1, 2, "0");
-  } else if (content === "SSS") {
-    let _pipe = divideInt(time_get_micro(time), 1e3);
-    let _pipe$1 = to_string(_pipe);
-    return pad_start(_pipe$1, 3, "0");
-  } else if (content === "SSSS") {
-    let _pipe = time_get_micro(time);
-    let _pipe$1 = to_string(_pipe);
-    return pad_start(_pipe$1, 6, "0");
-  } else {
-    return content;
-  }
-}
-function time_from_unix_micro(unix_ts) {
-  return time_from_microseconds(remainderInt(unix_ts, day_microseconds));
-}
-function instant_as_utc_time(instant) {
-  return time_from_unix_micro(instant.timestamp_utc_us);
-}
-function instant_as_local_time(instant) {
-  return time_from_unix_micro(
-    instant.timestamp_utc_us + instant.offset_local_us
-  );
-}
-function instant_as_local_datetime(instant) {
-  return new DateTime(
-    instant_as_local_date(instant),
-    instant_as_local_time(instant),
-    new Offset(divideInt(instant.offset_local_us, 6e7))
-  );
-}
-function get_datetime_format_str(format2) {
-  if (format2 instanceof ISO8601Seconds) {
-    return "YYYY-MM-DDTHH:mm:sszz";
-  } else if (format2 instanceof ISO8601Milli) {
-    return "YYYY-MM-DDTHH:mm:ss.SSSzz";
-  } else if (format2 instanceof ISO8601Micro) {
-    return "YYYY-MM-DDTHH:mm:ss.SSSSzz";
-  } else if (format2 instanceof HTTP) {
-    return "ddd, DD MMM YYYY HH:mm:ss GMT";
-  } else if (format2 instanceof DateFormat && format2[0] instanceof ISO8601Date) {
-    return "YYYY-MM-DD";
-  } else if (format2 instanceof TimeFormat && format2[0] instanceof ISO8601TimeSeconds) {
-    return "HH:mm:ss";
-  } else if (format2 instanceof TimeFormat && format2[0] instanceof ISO8601TimeMilli) {
-    return "HH:mm:ss.SSS";
-  } else if (format2 instanceof TimeFormat && format2[0] instanceof ISO8601TimeMicro) {
-    return "HH:mm:ss.SSSS";
-  } else if (format2 instanceof TimeFormat && format2[0] instanceof CustomTime) {
-    let format$1 = format2[0].format;
-    return format$1;
-  } else if (format2 instanceof TimeFormat && format2[0] instanceof CustomTimeLocalised) {
-    let format$1 = format2[0].format;
-    return format$1;
-  } else if (format2 instanceof DateFormat && format2[0] instanceof CustomDate) {
-    let format$1 = format2[0].format;
-    return format$1;
-  } else if (format2 instanceof DateFormat && format2[0] instanceof CustomDateLocalised) {
-    let format$1 = format2[0].format;
-    return format$1;
-  } else if (format2 instanceof Custom) {
-    let format$1 = format2.format;
-    return format$1;
-  } else {
-    let format$1 = format2.format;
-    return format$1;
-  }
-}
 function offset_local_micro() {
   return local_offset() * 6e7;
-}
-function now2() {
-  return new Instant(
-    now(),
-    offset_local_micro(),
-    now_monotonic(),
-    now_unique()
-  );
-}
-var utc = /* @__PURE__ */ new Offset(0);
-function instant_as_utc_datetime(instant) {
-  return new DateTime(
-    instant_as_utc_date(instant),
-    instant_as_utc_time(instant),
-    utc
-  );
 }
 var unix_epoch_in_rata_die = 719163;
 function date_to_rata_die(date) {
@@ -3294,120 +2769,262 @@ function date_calendar_from_unix_days(unix_days) {
 function date_to_calendar_date(date) {
   return date_calendar_from_unix_days(date.unix_days);
 }
-function date_replace_format(content, date) {
+function date_to_string(date) {
   let calendar_date = date_to_calendar_date(date);
-  if (content === "YY") {
-    let _pipe = calendar_date.year;
-    let _pipe$1 = to_string(_pipe);
-    let _pipe$2 = pad_start(_pipe$1, 2, "0");
-    return slice(_pipe$2, -2, 2);
-  } else if (content === "YYYY") {
-    let _pipe = calendar_date.year;
-    let _pipe$1 = to_string(_pipe);
-    return pad_start(_pipe$1, 4, "0");
-  } else if (content === "M") {
-    let _pipe = calendar_date.month;
-    let _pipe$1 = month_to_int(_pipe);
-    return to_string(_pipe$1);
-  } else if (content === "MM") {
-    let _pipe = calendar_date.month;
-    let _pipe$1 = month_to_int(_pipe);
-    let _pipe$2 = to_string(_pipe$1);
-    return pad_start(_pipe$2, 2, "0");
-  } else if (content === "MMM") {
-    let _pipe = calendar_date.month;
-    return month_to_short_string(_pipe);
-  } else if (content === "MMMM") {
-    let _pipe = calendar_date.month;
-    return month_to_long_string(_pipe);
-  } else if (content === "D") {
-    let _pipe = calendar_date.day;
-    return to_string(_pipe);
-  } else if (content === "DD") {
-    let _pipe = calendar_date.day;
-    let _pipe$1 = to_string(_pipe);
-    return pad_start(_pipe$1, 2, "0");
-  } else if (content === "d") {
-    let _pipe = date;
-    let _pipe$1 = date_to_day_of_week_number(_pipe);
-    return to_string(_pipe$1);
-  } else if (content === "dd") {
-    let _pipe = date;
-    let _pipe$1 = date_to_day_of_week_short(_pipe);
-    return slice(_pipe$1, 0, 2);
-  } else if (content === "ddd") {
-    let _pipe = date;
-    return date_to_day_of_week_short(_pipe);
-  } else if (content === "dddd") {
-    let _pipe = date;
-    return date_to_day_of_week_long(_pipe);
-  } else {
-    return content;
-  }
+  let _pipe = concat(
+    toList([
+      to_string(calendar_date.year),
+      "-",
+      (() => {
+        let _pipe2 = month_to_int(calendar_date.month);
+        let _pipe$1 = to_string(_pipe2);
+        return pad_start(_pipe$1, 2, "0");
+      })(),
+      "-",
+      (() => {
+        let _pipe2 = to_string(calendar_date.day);
+        return pad_start(_pipe2, 2, "0");
+      })()
+    ])
+  );
+  return identity(_pipe);
 }
-var format_regex = "\\[([^\\]]+)\\]|Y{1,4}|M{1,4}|D{1,2}|d{1,4}|H{1,2}|h{1,2}|a|A|m{1,2}|s{1,2}|Z{1,2}|z{1,2}|S{3,4}|GMT|.";
-function datetime_format(datetime, format2) {
-  let format_str = get_datetime_format_str(format2);
-  let $ = from_string(format_regex);
-  if (!$.isOk()) {
-    throw makeError(
-      "let_assert",
-      "tempo",
-      1e3,
-      "datetime_format",
-      "Pattern match failed, no pattern matched the value.",
-      { value: $ }
-    );
-  }
-  let re = $[0];
-  let _pipe = scan2(re, format_str);
-  let _pipe$1 = reverse(_pipe);
-  let _pipe$2 = fold(
-    _pipe$1,
-    toList([]),
-    (acc, match) => {
-      if (match instanceof Match && match.submatches.hasLength(0)) {
-        let content = match.content;
-        return prepend(
-          (() => {
-            let _pipe$22 = content;
-            let _pipe$3 = date_replace_format(_pipe$22, datetime.date);
-            let _pipe$4 = time_replace_format(_pipe$3, datetime.time);
-            return offset_replace_format(_pipe$4, datetime.offset);
-          })(),
-          acc
-        );
-      } else if (match instanceof Match && match.submatches.hasLength(1) && match.submatches.head instanceof Some) {
-        let sub = match.submatches.head[0];
-        return prepend(sub, acc);
+function date_from_rata_die(rata_die) {
+  return new Date3(rata_die - unix_epoch_in_rata_die);
+}
+function date_calendar_to_unix_days(date) {
+  let year_days$1 = date_days_before_year(date.year);
+  let leap_days = (() => {
+    let $ = is_leap_year(date.year);
+    if ($) {
+      return 1;
+    } else {
+      return 0;
+    }
+  })();
+  let month_days = (() => {
+    let $ = date.month;
+    if ($ instanceof January) {
+      return 0;
+    } else if ($ instanceof February) {
+      return 31;
+    } else if ($ instanceof March) {
+      return 59 + leap_days;
+    } else if ($ instanceof April) {
+      return 90 + leap_days;
+    } else if ($ instanceof May) {
+      return 120 + leap_days;
+    } else if ($ instanceof June) {
+      return 151 + leap_days;
+    } else if ($ instanceof July) {
+      return 181 + leap_days;
+    } else if ($ instanceof August) {
+      return 212 + leap_days;
+    } else if ($ instanceof September) {
+      return 243 + leap_days;
+    } else if ($ instanceof October) {
+      return 273 + leap_days;
+    } else if ($ instanceof November) {
+      return 304 + leap_days;
+    } else {
+      return 334 + leap_days;
+    }
+  })();
+  let _pipe = year_days$1 + month_days + date.day;
+  return date_from_rata_die(_pipe);
+}
+function date_from_calendar_date(calendar_date) {
+  return date_calendar_to_unix_days(calendar_date);
+}
+function date_from_tuple(date) {
+  let year = date[0];
+  let month = date[1];
+  let day = date[2];
+  return try$(
+    (() => {
+      let _pipe = month_from_int(month);
+      return replace_error(
+        _pipe,
+        new DateMonthOutOfBounds(to_string(month))
+      );
+    })(),
+    (month2) => {
+      let $ = year >= 1e3 && year <= 9999;
+      if ($) {
+        let $1 = day >= 1 && day <= month_days_of(month2, year);
+        if ($1) {
+          return new Ok(
+            date_from_calendar_date(new Date2(year, month2, day))
+          );
+        } else {
+          return new Error(
+            new DateDayOutOfBounds(
+              month_to_short_string(month2) + " " + to_string(day)
+            )
+          );
+        }
       } else {
-        let content = match.content;
-        return prepend(content, acc);
+        return new Error(
+          new DateYearOutOfBounds(to_string(year))
+        );
       }
     }
   );
-  return join(_pipe$2, "");
 }
-function format_utc(format2) {
-  let _pipe = now2();
-  let _pipe$1 = instant_as_utc_datetime(_pipe);
-  return datetime_format(_pipe$1, format2);
+
+// build/dev/javascript/gtempo/tempo/date.mjs
+function split_int_tuple(date, delim) {
+  let _pipe = split2(date, delim);
+  let _pipe$1 = map(_pipe, parse_int);
+  let _pipe$2 = all(_pipe$1);
+  let _pipe$3 = try$(
+    _pipe$2,
+    (date2) => {
+      if (date2.hasLength(3)) {
+        let year = date2.head;
+        let month = date2.tail.head;
+        let day = date2.tail.tail.head;
+        return new Ok([year, month, day]);
+      } else {
+        return new Error(void 0);
+      }
+    }
+  );
+  return replace_error(
+    _pipe$3,
+    new DateInvalidFormat(date)
+  );
 }
-function format_local(format2) {
-  if (format2 instanceof HTTP) {
-    return format_utc(new HTTP());
+function to_string3(date) {
+  return date_to_string(date);
+}
+function from_tuple(date) {
+  return date_from_tuple(date);
+}
+function from_string2(date) {
+  return try$(
+    (() => {
+      let _pipe = split_int_tuple(date, "-");
+      let _pipe$1 = try_recover(
+        _pipe,
+        (_) => {
+          return split_int_tuple(date, "/");
+        }
+      );
+      let _pipe$2 = try_recover(
+        _pipe$1,
+        (_) => {
+          return split_int_tuple(date, ".");
+        }
+      );
+      let _pipe$3 = try_recover(
+        _pipe$2,
+        (_) => {
+          return split_int_tuple(date, "_");
+        }
+      );
+      let _pipe$4 = try_recover(
+        _pipe$3,
+        (_) => {
+          return split_int_tuple(date, " ");
+        }
+      );
+      return try_recover(
+        _pipe$4,
+        (_) => {
+          let year = (() => {
+            let _pipe$5 = slice(date, 0, 4);
+            return parse_int(_pipe$5);
+          })();
+          let month = (() => {
+            let _pipe$5 = slice(date, 4, 2);
+            return parse_int(_pipe$5);
+          })();
+          let day = (() => {
+            let _pipe$5 = slice(date, 6, 2);
+            return parse_int(_pipe$5);
+          })();
+          if (year.isOk() && month.isOk() && day.isOk()) {
+            let year$1 = year[0];
+            let month$1 = month[0];
+            let day$1 = day[0];
+            return new Ok([year$1, month$1, day$1]);
+          } else {
+            return new Error(new DateInvalidFormat(date));
+          }
+        }
+      );
+    })(),
+    (parts) => {
+      let _pipe = from_tuple(parts);
+      return map_error(
+        _pipe,
+        (_capture) => {
+          return new DateOutOfBounds(date, _capture);
+        }
+      );
+    }
+  );
+}
+function literal(date) {
+  let $ = from_string2(date);
+  if ($.isOk()) {
+    let date$1 = $[0];
+    return date$1;
+  } else if (!$.isOk() && $[0] instanceof DateInvalidFormat) {
+    throw makeError(
+      "panic",
+      "tempo/date",
+      112,
+      "literal",
+      "Invalid date literal format",
+      {}
+    );
+  } else if (!$.isOk() && $[0] instanceof DateOutOfBounds && $[0].cause instanceof DateDayOutOfBounds) {
+    throw makeError(
+      "panic",
+      "tempo/date",
+      114,
+      "literal",
+      "Invalid date literal day value",
+      {}
+    );
+  } else if (!$.isOk() && $[0] instanceof DateOutOfBounds && $[0].cause instanceof DateMonthOutOfBounds) {
+    throw makeError(
+      "panic",
+      "tempo/date",
+      116,
+      "literal",
+      "Invalid date literal month value",
+      {}
+    );
   } else {
-    let _pipe = now2();
-    let _pipe$1 = instant_as_local_datetime(_pipe);
-    return datetime_format(_pipe$1, format2);
+    throw makeError(
+      "panic",
+      "tempo/date",
+      118,
+      "literal",
+      "Invalid date literal year value",
+      {}
+    );
   }
+}
+function from_unix_micro(unix_ts) {
+  return date_from_unix_micro(unix_ts);
+}
+function current_local() {
+  let _pipe = now() + offset_local_micro();
+  return from_unix_micro(_pipe);
+}
+function difference2(a2, b) {
+  return date_days_apart(a2, b);
 }
 
 // build/dev/javascript/lustre/lustre/effect.mjs
 var Effect = class extends CustomType {
-  constructor(all) {
+  constructor(all2) {
     super();
-    this.all = all;
+    this.all = all2;
   }
 };
 function custom(run2) {
@@ -5062,7 +4679,7 @@ function parse_scheme_loop(loop$original, loop$uri_string, loop$pieces, loop$siz
     }
   }
 }
-function to_string3(uri) {
+function to_string4(uri) {
   let parts = (() => {
     let $ = uri.fragment;
     if ($ instanceof Some) {
@@ -5164,7 +4781,7 @@ var Trace = class extends CustomType {
 };
 var Connect = class extends CustomType {
 };
-var Options2 = class extends CustomType {
+var Options = class extends CustomType {
 };
 var Patch = class extends CustomType {
 };
@@ -5181,7 +4798,7 @@ function method_to_string(method) {
     return "GET";
   } else if (method instanceof Head) {
     return "HEAD";
-  } else if (method instanceof Options2) {
+  } else if (method instanceof Options) {
     return "OPTIONS";
   } else if (method instanceof Patch) {
     return "PATCH";
@@ -5350,7 +4967,7 @@ function from_fetch_response(response) {
   );
 }
 function request_common(request) {
-  let url = to_string3(to_uri(request));
+  let url = to_string4(to_uri(request));
   let method = method_to_string(request.method).toUpperCase();
   let options = {
     headers: make_headers(request.headers),
@@ -5658,13 +5275,15 @@ var GotQuestions = class extends CustomType {
   }
 };
 var Model2 = class extends CustomType {
-  constructor(title, url, submitted, questions, show_results) {
+  constructor(title, url, submitted, questions, show_results, date, launch_date2) {
     super();
     this.title = title;
     this.url = url;
     this.submitted = submitted;
     this.questions = questions;
     this.show_results = show_results;
+    this.date = date;
+    this.launch_date = launch_date2;
   }
 };
 function encode_result(result) {
@@ -5677,27 +5296,15 @@ function encode_result(result) {
     ])
   );
 }
-function date_format() {
-  return format_local(new Custom("YYYYMMDD"));
+function date_format(date) {
+  let _pipe = date;
+  let _pipe$1 = to_string3(_pipe);
+  return replace(_pipe$1, "-", "");
 }
-function save_results(result) {
-  return from(
-    (_) => {
-      return set_localstorage(
-        date_format(),
-        (() => {
-          let _pipe = result;
-          let _pipe$1 = encode_result(_pipe);
-          return to_string2(_pipe$1);
-        })()
-      );
-    }
-  );
-}
-function get_today() {
+function get_today(model) {
   return from(
     (dispatch) => {
-      let $ = get_localstorage(date_format());
+      let $ = get_localstorage(date_format(model.date));
       if ($.isOk()) {
         let result = $[0];
         dispatch(new ReadAnswers(result));
@@ -5746,7 +5353,7 @@ function calculate_results(questions) {
         throw makeError(
           "panic",
           "mooquiz",
-          290,
+          300,
           "",
           "Unfilled scored should never have been saved",
           {}
@@ -5767,6 +5374,21 @@ function calculate_results(questions) {
     }
   );
   return new QuizResult(results, answers, score, out_of);
+}
+function save_results(model) {
+  return from(
+    (_) => {
+      return set_localstorage(
+        date_format(model.date),
+        (() => {
+          let _pipe = model.questions;
+          let _pipe$1 = calculate_results(_pipe);
+          let _pipe$2 = encode_result(_pipe$1);
+          return to_string2(_pipe$2);
+        })()
+      );
+    }
+  );
 }
 function share_string(results) {
   let _pipe = map(
@@ -5814,7 +5436,9 @@ function update(model, msg) {
           _record.url,
           _record.submitted,
           _record.questions,
-          !model.show_results
+          !model.show_results,
+          _record.date,
+          _record.launch_date
         );
       })(),
       none()
@@ -5878,7 +5502,9 @@ function update(model, msg) {
             _record.url,
             true,
             questions,
-            _record.show_results
+            _record.show_results,
+            _record.date,
+            _record.launch_date
           );
         })(),
         none()
@@ -5895,7 +5521,7 @@ function update(model, msg) {
       throw makeError(
         "let_assert",
         "mooquiz",
-        92,
+        96,
         "update",
         "Pattern match failed, no pattern matched the value.",
         { value: $ }
@@ -5911,7 +5537,7 @@ function update(model, msg) {
           throw makeError(
             "let_assert",
             "mooquiz",
-            94,
+            98,
             "",
             "Pattern match failed, no pattern matched the value.",
             { value: $1 }
@@ -5970,8 +5596,19 @@ function update(model, msg) {
       );
     })();
     return [
-      new Model2(title, "https://popquizza.com", false, questions$2, true),
-      get_today()
+      (() => {
+        let _record = model;
+        return new Model2(
+          title,
+          _record.url,
+          _record.submitted,
+          questions$2,
+          _record.show_results,
+          _record.date,
+          _record.launch_date
+        );
+      })(),
+      get_today(model)
     ];
   } else if (msg instanceof GotQuestions && !msg[0].isOk()) {
     return [model, none()];
@@ -5988,10 +5625,12 @@ function update(model, msg) {
             _record.url,
             true,
             _record.questions,
-            _record.show_results
+            _record.show_results,
+            _record.date,
+            _record.launch_date
           );
         })(),
-        save_results(calculate_results(model.questions))
+        save_results(model)
       ];
     }
   } else {
@@ -6035,7 +5674,9 @@ function update(model, msg) {
               _record.url,
               _record.submitted,
               questions,
-              _record.show_results
+              _record.show_results,
+              _record.date,
+              _record.launch_date
             );
           })(),
           none()
@@ -6187,6 +5828,11 @@ function answer_div(answer, question, submitted) {
     ])
   );
 }
+function round3(model) {
+  let _pipe = model.launch_date;
+  let _pipe$1 = difference2(_pipe, model.date);
+  return to_string(_pipe$1);
+}
 function view(model) {
   return div(
     toList([class$("max-w-2xl mx-auto p-8")]),
@@ -6209,7 +5855,7 @@ function view(model) {
         toList([
           h2(
             toList([class$("text-xl font-bold mb-8 text-subhead")]),
-            toList([text2(model.title)])
+            toList([text2(round3(model) + ". " + model.title)])
           ),
           div(
             toList([class$("flex flex-col gap-6 mb-4")]),
@@ -6253,9 +5899,18 @@ function view(model) {
   );
 }
 var questions_dir_url = "https://raw.githubusercontent.com/mooquiz/Questions/refs/heads/main/";
+var launch_date = "2025-04-19";
 function init2(_) {
-  let model = new Model2("Loading", "", false, toList([]), true);
-  let questions_url = questions_dir_url + date_format() + ".txt";
+  let model = new Model2(
+    "Loading",
+    "popquizza.com",
+    false,
+    toList([]),
+    true,
+    current_local(),
+    literal(launch_date)
+  );
+  let questions_url = questions_dir_url + date_format(model.date) + ".txt";
   return [
     model,
     get(
@@ -6273,7 +5928,7 @@ function main2() {
     throw makeError(
       "let_assert",
       "mooquiz",
-      44,
+      46,
       "main",
       "Pattern match failed, no pattern matched the value.",
       { value: $ }
