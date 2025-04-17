@@ -257,7 +257,7 @@ fn button(model: Model) {
 fn results_title(score: Int) {
   case score {
     0|1|2 -> "A BIT OF A FLOP"
-    3|4|5 -> "BUBBBLING UNDER"
+    3|4|5 -> "BUBBLING UNDER"
     6|7|8 -> "HIGHEST NEW ENTRY"
     9 -> "TAKING THE CHART BY STORM"
     10 -> "NO 1 SMASH HIT"
@@ -347,10 +347,10 @@ fn answer_radio(question: Question, answer: Answer, submitted: Bool) {
 
 fn answer_div(answer: Answer, question: Question, submitted: Bool) {
   let bg = case submitted, question.selected == Some(answer.pos), question.correct == answer.pos { 
-    False, True, _ -> "bg-selected"
-    True, True, True, -> "bg-correct font-bold"
-    True, True, False -> "bg-incorrect font-bold"
-    _, _, _ -> "bg-zinc-100 hover:bg-zinc-200 cursor-pointer"
+    False, True, _ -> "bg-selected dark:bg-d-selected"
+    True, True, True, -> "bg-correct dark:bg-d-correct font-bold"
+    True, True, False -> "bg-incorrect dark:bg-d-incorrect font-bold"
+    _, _, _ -> "bg-question dark:bg-d-question hover:bg-question-hover dark:hover:bg-d-question-hover cursor-pointer"
   }
 
   html.label(
@@ -371,13 +371,13 @@ fn round(model: Model) {
 fn view(model: Model) {
   html.div([attribute.class("py-8")], [
 	  html.header([],[
-		  html.h1([attribute.class("font-logo font-[800] text-shadow-lg shadow-zinc-200 text-5xl text-head")],[
+		  html.h1([attribute.class("font-logo font-[800] text-shadow-lg shadow-zinc-200 text-5xl text-head dark:d-head")],[
 			  html.text("POPQUIZZA")
 			])
 		]),
     html.main([], [
-      html.h2([attribute.class("text-xl font-bold text-subhead")], [html.text(model.title)]),
-      html.h2([attribute.class("text-sm font-bold mb-8 text-subhead")], [html.text(date.format(model.date, tempo.CustomDate("DD-MM-YY")))]),
+      html.h2([attribute.class("text-xl font-bold text-subhead dark:text-d-subhead")], [html.text(model.title)]),
+      html.h2([attribute.class("text-sm font-bold mb-8 text-subhead dark:text-d-subhead")], [html.text(date.format(model.date, tempo.CustomDate("DD-MM-YY")))]),
       html.div([attribute.class("flex flex-col gap-6 mb-4")], list.map(model.questions, fn(q) { 
         html.div([], [
           html.h3([attribute.class("text-lg font-semibold text-head")], [html.text(q.text)]),
