@@ -254,6 +254,16 @@ fn button(model: Model) {
 	], [html.text("Submit")])
 }
 
+fn results_title(score: Int) {
+  case score {
+    0|1|2 -> "A BIT OF A FLOP"
+    3|4|5 -> "BUBBBLING UNDER"
+    6|7|8 -> "HIGHEST NEW ENTRY"
+    9 -> "TAKING THE CHART BY STORM"
+    10 -> "NO 1 SMASH HIT"
+    _ -> "WELL DONE"
+  }
+}
 
 fn result_panel(model: Model) {
   case model.show_results {
@@ -266,7 +276,7 @@ fn result_panel(model: Model) {
           attribute.class("border-2 border-zinc-600 rounded-lg p-4 absolute bg-white")
         ], [
           html.header([attribute.class("flex")], [
-            html.h1([attribute.class("text-xl font-logo text-head font-extrabold mb-6 grow")], [html.text("Well Done!")]),
+            html.h1([attribute.class("text-xl font-logo text-head font-extrabold mb-6 grow")], [html.text(results_title(result.score))]),
             html.a([
               event.on_click(ToggleResultPanel),
               attribute.class("duration-200 active:translate-y-0.5 active:scale-95 text-lg font-bold cursor-pointer")
