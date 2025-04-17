@@ -243,14 +243,17 @@ fn unanswered_questions(model: Model) {
   list.any(model.questions, fn(q) { q.selected == None })
 }
 
+fn button_css(active: Bool) {
+  "px-4 py-2 rounded-lg font-semibold transition " <> case active {
+		True -> "bg-gray-300 text-gray-500 cursor-not-allowed opacity-60 dark:bg-slate-700 dark:text-slate-400"
+		False -> "bg-head text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-head dark:hover:bg-purple-500"
+	} 
+}
+
 fn button(model: Model) { 
-	let classes = case unanswered_questions(model) {
-		True -> "cursor-not-allowed text-zinc-300 border-zinc-300"
-		False -> "active:translate-y-0.5 active:scale-95 border-zinc-600 bg-zinc-200"
-	}
 	html.button([
 		event.on_click(SubmitAnswers),
-		attribute.class("duration-200 border p-2 rounded-md " <> classes)
+		attribute.class(button_css(unanswered_questions(model)))
 	], [html.text("Submit")])
 }
 
@@ -270,7 +273,7 @@ fn result_panel(model: Model) {
     True -> {
       let result = calculate_results(model.questions)
       html.div([
-        attribute.class("fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50")
+        attribute.class("fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 text-zinc-800")
       ], [
         html.div([
           attribute.class("border-2 border-zinc-600 rounded-lg p-4 absolute bg-white")
@@ -287,8 +290,8 @@ fn result_panel(model: Model) {
           html.p([attribute.class("mb-6")], [html.text("A new set of questions will appear at midnight.")]),
 					html.div([],[html.button([
 					  event.on_click(ShareResults),
-						attribute.class("duration-200 border border-zinc-600 p-2 rounded-md active:translate-y-0.5 active:scale-95 border-zinc-600 bg-zinc-200")
-					  ],[
+						attribute.class(button_css(False))
+          ],[
 						html.text("Share")
 					])])
 				])
@@ -297,7 +300,7 @@ fn result_panel(model: Model) {
     False -> {
 		  html.button([
 			  event.on_click(ToggleResultPanel),
-				attribute.class("duration-200 border p-2 rounded-md active:translate-y-0.5 active:scale-95 border-zinc-600 bg-zinc-200")
+				attribute.class(button_css(False))
 			],[
 			  html.text("Show Results")
 			])
