@@ -376,7 +376,8 @@ fn view(model: Model) {
 			])
 		]),
     html.main([], [
-      html.h2([attribute.class("text-xl font-bold mb-8 text-subhead")], [html.text(round(model) <> ". " <> model.title)]),
+      html.h2([attribute.class("text-xl font-bold text-subhead")], [html.text(model.title)]),
+      html.h2([attribute.class("text-sm font-bold mb-8 text-subhead")], [html.text(date.format(model.date, tempo.CustomDate("DD-MM-YY")))]),
       html.div([attribute.class("flex flex-col gap-6 mb-4")], list.map(model.questions, fn(q) { 
         html.div([], [
           html.h3([attribute.class("text-lg font-semibold text-head")], [html.text(q.text)]),
