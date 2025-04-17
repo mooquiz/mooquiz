@@ -23,7 +23,9 @@ module.exports = {
         "head": "#7E22CE",
         "d-head": "#C084FC",
         "subhead": "#0369A1",
-        "d-subhead": "#7DD3FC"
+        "d-subhead": "#7DD3FC",
+        "normaltext": "#111827",
+        "d-normaltext": "#F9FAFB"
       }
 		},
   },
