@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2025 ⟁K <k@u27c.one>
+
 import lustre
 import lustre/element/html
 import lustre/event
@@ -356,7 +359,7 @@ fn round(model: Model) {
 }
 
 fn view(model: Model) {
-  html.div([attribute.class("max-w-2xl mx-auto p-8")], [
+  html.div([attribute.class("py-8")], [
 	  html.header([],[
 		  html.h1([attribute.class("font-logo font-[800] text-shadow-lg shadow-zinc-200 text-5xl text-head")],[
 			  html.text("POPQUIZZA")
