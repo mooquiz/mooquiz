@@ -1,32 +1,46 @@
 module.exports = {
   content: ["./index.html", "./src/**/*.{gleam,mjs}"],
-  darkMode: 'media',
+  darkMode: "media",
   theme: {
     extend: {
-			fontFamily: {
-				sans: ['Inter', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
-				logo: ['Anybody', 'Fredoka', 'Poppins', 'Arial Rounded MT Bold', 'Arial', 'sans-serif'],
-			},
+      fontFamily: {
+        sans: [
+          "Inter",
+          "Segoe UI",
+          "Roboto",
+          "Helvetica Neue",
+          "Arial",
+          "sans-serif",
+        ],
+        logo: [
+          "Anybody",
+          "Fredoka",
+          "Poppins",
+          "Arial Rounded MT Bold",
+          "Arial",
+          "sans-serif",
+        ],
+      },
       colors: {
-        "background": "#F8FAFC",
+        background: "#F8FAFC",
         "d-background": "#0F172A",
-        "question": "#E0E7FF",
-        "d-question": "#1E293B",
+        question: "#F1F5F9",
+        "d-question": "#1C2431",
         "question-hover": "#C7D2FE",
         "d-question-hover": "#334155",
-        "correct": "#BBF7D0",
+        correct: "#BBF7D0",
         "d-correct": "#14532D",
-        "incorrect": "#FECACA",
+        incorrect: "#FECACA",
         "d-incorrect": "#7F1D1D",
-        "selected": "#DDD6FE",
+        selected: "#DDD6FE",
         "d-selected": "#5B21B6",
-        "head": "#7E22CE",
+        head: "#7E22CE",
         "d-head": "#C084FC",
-        "subhead": "#0369A1",
+        subhead: "#0369A1",
         "d-subhead": "#7DD3FC",
-        "normaltext": "#111827",
-        "d-normaltext": "#F9FAFB"
-      }
-		},
+        normaltext: "#111827",
+        "d-normaltext": "#F9FAFB",
+      },
+    },
   },
 };
