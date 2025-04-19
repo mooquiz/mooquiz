@@ -12,6 +12,10 @@ export function get_localstorage(key) {
   }
 }
 
+export function count_localstorage() {
+  return window.localStorage.length;
+}
+
 export function set_localstorage(key, json) {
   window.localStorage.setItem(key, json);
 }

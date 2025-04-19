@@ -39,12 +39,12 @@ type QuizResult {
 }
 
 type Stats {
-  Stats(streak: Int)
+  Stats(streak: Int, count: Int)
 }
 
 type Msg {
   ShareResults
-  ReadAnswers(String, Int)
+  ReadAnswers(String, Int, Int)
   SubmitAnswers
   ToggleResultPanel
   SelectAnswer(String)
@@ -80,7 +80,7 @@ fn init(_flags) -> #(Model, effect.Effect(Msg)) {
       show_results: True,
       date: date.current_local(),
       launch_date: date.literal(launch_date),
-      stats: Stats(streak: 0),
+      stats: Stats(streak: 0, count: 0),
     )
 
   #(
@@ -96,7 +96,8 @@ fn update(model: Model, msg: Msg) {
   case msg {
     ShareResults -> up_share_results(model)
     ToggleResultPanel -> toggle_result_panel(model)
-    ReadAnswers(answers, streak) -> read_answers(model, answers, streak)
+    ReadAnswers(answers, streak, count) ->
+      read_answers(model, answers, streak, count)
     GotQuestions(Ok(file)) -> got_questions(model, file)
     GotQuestions(Error(_)) -> #(model, effect.none())
     SubmitAnswers -> submit_answers(model)
@@ -115,7 +116,7 @@ fn toggle_result_panel(model: Model) {
   #(Model(..model, show_results: !model.show_results), effect.none())
 }
 
-fn read_answers(model: Model, answers: String, streak: Int) {
+fn read_answers(model: Model, answers: String, streak: Int, count: Int) {
   let result_decoder = {
     use answers <- decode.field("answers", decode.list(decode.int))
     use results <- decode.field("results", decode.list(decode.bool))
@@ -135,7 +136,7 @@ fn read_answers(model: Model, answers: String, streak: Int) {
           ..model,
           questions: questions,
           submitted: True,
-          stats: Stats(streak: streak),
+          stats: Stats(streak: streak, count: count),
         ),
         effect.none(),
       )
@@ -255,7 +256,11 @@ fn get_today(model: Model) {
   effect.from(fn(dispatch) {
     case get_localstorage(date_format(model.date)) {
       Ok(result) -> {
-        dispatch(ReadAnswers(result, calc_streak(model.date)))
+        dispatch(ReadAnswers(
+          result,
+          calc_streak(model.date),
+          count_localstorage(),
+        ))
         Nil
       }
       Error(_) -> Nil
@@ -294,6 +299,11 @@ fn set_localstorage(_key: String, _value: String) -> Nil {
 @external(javascript, "./app.ffi.mjs", "get_localstorage")
 fn get_localstorage(_key: String) -> Result(String, Nil) {
   Error(Nil)
+}
+
+@external(javascript, "./app.ffi.mjs", "count_localstorage")
+fn count_localstorage() -> Int {
+  0
 }
 
 fn date_format(date: tempo.Date) {
@@ -355,6 +365,15 @@ fn results_title(score: Int) {
   welldone
 }
 
+fn score_div(title: String, number: Int) {
+  html.div([attribute.class("grow")], [
+    html.div([attribute.class("text-3xl text-center")], [
+      html.text(int.to_string(number)),
+    ]),
+    html.div([attribute.class("text-center")], [html.text(title)]),
+  ])
+}
+
 fn result_panel(model: Model) {
   case model.show_results {
     True -> {
@@ -404,16 +423,10 @@ fn result_panel(model: Model) {
                 html.text(share_string(result.results)),
               ]),
               html.div(
+                [attribute.class("flex flex-row border-t border-b my-6 py-2")],
                 [
-                  attribute.class(
-                    "flex flex-col items-center border-t border-b my-6 py-2",
-                  ),
-                ],
-                [
-                  html.div([attribute.class("text-3xl")], [
-                    html.text(int.to_string(model.stats.streak)),
-                  ]),
-                  html.div([], [html.text("Streak")]),
+                  score_div("Count", model.stats.count),
+                  score_div("Streak", model.stats.streak),
                 ],
               ),
               html.p([attribute.class("mb-6")], [
