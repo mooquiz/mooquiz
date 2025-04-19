@@ -259,7 +259,7 @@ fn encode_result(result: QuizResult) -> json.Json {
 }
 
 @external(javascript, "./app.ffi.mjs", "share_results")
-fn share_results_js(share_data: json.Json) -> Nil {
+fn share_results_js(_share_data: json.Json) -> Nil {
   Nil
 }
 
@@ -449,12 +449,6 @@ fn answer_div(answer: Answer, question: Question, submitted: Bool) {
     html.span([attribute.class("grow")], [html.text(answer.text)]),
     answer_radio(question, answer, submitted),
   ])
-}
-
-fn round(model: Model) {
-  model.launch_date
-  |> date.difference(model.date)
-  |> int.to_string
 }
 
 fn view(model: Model) {
