@@ -123,53 +123,54 @@ fn update(model: Model, msg: Msg) {
         }
       }
     }
-    GotQuestions(Ok(file)) -> {
-      let assert [title, ..questions] =
-        file |> string.trim |> string.split("\n\n")
-      let questions =
-        list.map(questions, fn(q) {
-          let assert [question_text, correct, ..answers] = string.split(q, "\n")
-
-          let answers =
-            answers
-            |> list.length
-            |> list.range(1)
-            |> list.reverse
-            |> list.zip(answers)
-            |> list.map(fn(a) {
-              let #(id, text) = a
-              Answer(id, text)
-            })
-
-          #(question_text, correct, answers)
-        })
-
-      let questions =
-        questions
-        |> list.length
-        |> list.range(1)
-        |> list.reverse
-        |> list.zip(questions)
-        |> list.map(fn(q) {
-          let #(id, #(question_text, correct, answers)) = q
-          Question(
-            id,
-            question_text,
-            answers,
-            case int.parse(correct) {
-              Ok(correct) -> correct
-              Error(Nil) -> 0
-            },
-            None,
-          )
-        })
-
-      #(Model(..model, title: title, questions: questions), get_today(model))
-    }
+    GotQuestions(Ok(file)) -> got_questions(model, file)
     GotQuestions(Error(_)) -> #(model, effect.none())
     SubmitAnswers -> submit_answers(model)
     SelectAnswer(value) -> select_answer(model, value)
   }
+}
+
+fn got_questions(model, file) {
+  let assert [title, ..questions] = file |> string.trim |> string.split("\n\n")
+  let questions =
+    list.map(questions, fn(q) {
+      let assert [question_text, correct, ..answers] = string.split(q, "\n")
+
+      let answers =
+        answers
+        |> list.length
+        |> list.range(1)
+        |> list.reverse
+        |> list.zip(answers)
+        |> list.map(fn(a) {
+          let #(id, text) = a
+          Answer(id, text)
+        })
+
+      #(question_text, correct, answers)
+    })
+
+  let questions =
+    questions
+    |> list.length
+    |> list.range(1)
+    |> list.reverse
+    |> list.zip(questions)
+    |> list.map(fn(q) {
+      let #(id, #(question_text, correct, answers)) = q
+      Question(
+        id,
+        question_text,
+        answers,
+        case int.parse(correct) {
+          Ok(correct) -> correct
+          Error(Nil) -> 0
+        },
+        None,
+      )
+    })
+
+  #(Model(..model, title: title, questions: questions), get_today(model))
 }
 
 fn submit_answers(model: Model) {
@@ -463,6 +464,18 @@ fn view(model: Model) {
         [html.text("POPQUIZZA")],
       ),
     ]),
+    html.div(
+      [
+        attribute.class(
+          "border rounded border-gray-300 dark:border-gray-700 bg-white dark:bg-d-b p-4 font-semibold my-4",
+        ),
+      ],
+      [
+        html.text(
+          "Official launch on Wednesday 23 April 2025! Pop back then for real questions! ",
+        ),
+      ],
+    ),
     html.main([], [
       html.h2(
         [attribute.class("text-xl font-bold text-subhead dark:text-d-subhead")],
