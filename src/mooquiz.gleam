@@ -88,45 +88,44 @@ fn init(_flags) -> #(Model, effect.Effect(Msg)) {
 
 fn update(model: Model, msg: Msg) {
   case msg {
-    ShareResults -> {
-      #(
-        model,
-        share_results(
-          model.title,
-          model.url,
-          calculate_results(model.questions),
-        ),
-      )
-    }
-    ToggleResultPanel -> {
-      #(Model(..model, show_results: !model.show_results), effect.none())
-    }
-    ReadAnswers(answers) -> {
-      let result_decoder = {
-        use answers <- decode.field("answers", decode.list(decode.int))
-        use results <- decode.field("results", decode.list(decode.bool))
-        use score <- decode.field("score", decode.int)
-        use out_of <- decode.field("outOf", decode.int)
-        decode.success(QuizResult(results:, answers:, score:, out_of:))
-      }
-      case json.parse(answers, result_decoder) {
-        Error(_) -> #(model, effect.none())
-        Ok(attempt) -> {
-          let questions =
-            attempt.answers
-            |> list.zip(model.questions)
-            |> list.map(fn(x) { Question(..x.1, selected: Some(x.0)) })
-          #(
-            Model(..model, questions: questions, submitted: True),
-            effect.none(),
-          )
-        }
-      }
-    }
+    ShareResults -> up_share_results(model)
+    ToggleResultPanel -> toggle_result_panel(model)
+    ReadAnswers(answers) -> read_answers(model, answers)
     GotQuestions(Ok(file)) -> got_questions(model, file)
     GotQuestions(Error(_)) -> #(model, effect.none())
     SubmitAnswers -> submit_answers(model)
     SelectAnswer(value) -> select_answer(model, value)
+  }
+}
+
+fn up_share_results(model: Model) {
+  #(
+    model,
+    share_results(model.title, model.url, calculate_results(model.questions)),
+  )
+}
+
+fn toggle_result_panel(model: Model) {
+  #(Model(..model, show_results: !model.show_results), effect.none())
+}
+
+fn read_answers(model: Model, answers: String) {
+  let result_decoder = {
+    use answers <- decode.field("answers", decode.list(decode.int))
+    use results <- decode.field("results", decode.list(decode.bool))
+    use score <- decode.field("score", decode.int)
+    use out_of <- decode.field("outOf", decode.int)
+    decode.success(QuizResult(results:, answers:, score:, out_of:))
+  }
+  case json.parse(answers, result_decoder) {
+    Error(_) -> #(model, effect.none())
+    Ok(attempt) -> {
+      let questions =
+        attempt.answers
+        |> list.zip(model.questions)
+        |> list.map(fn(x) { Question(..x.1, selected: Some(x.0)) })
+      #(Model(..model, questions: questions, submitted: True), effect.none())
+    }
   }
 }
 
