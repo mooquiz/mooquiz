@@ -303,14 +303,34 @@ fn button(model: Model) {
 }
 
 fn results_title(score: Int) {
-  case score {
-    0 | 1 | 2 -> "A BIT OF A FLOP"
-    3 | 4 | 5 -> "BUBBLING UNDER"
-    6 | 7 | 8 -> "HIGHEST NEW ENTRY"
-    9 -> "TAKING THE CHART BY STORM"
-    10 -> "NO 1 SMASH HIT"
-    _ -> "WELL DONE"
-  }
+  let welldone =
+    case score {
+      0 | 1 | 2 -> [
+        "Bit of a flop!", "The industry is brutal!", "Bottom of the pops!",
+        "Tomorrow's another day!", "Don't give up the day job!",
+      ]
+      3 | 4 | 5 -> [
+        "Bubbling under!", "Must try harder!", "Keep trying!",
+        "Keep on keeping on!", "Slow start, but there's something there!",
+      ]
+      6 | 7 | 8 -> [
+        "Highest new entry!", "Bright new talent!", "Rising star!",
+        "Bring it on!", "Climbing the chart!",
+      ]
+      9 -> [
+        "Threatening the top spot!", "Almost there!", "Look out for this one!",
+        "Flying high!", "Enjoying the high life!",
+      ]
+      10 -> [
+        "Top of the chart!", "Chartbuster!", "No 1 Smash Hit!",
+        "Now that's what I call a hit!", "You've made it big!",
+      ]
+      _ -> ["WELL DONE"]
+    }
+    |> list.sample(1)
+
+  let assert [welldone] = welldone
+  welldone
 }
 
 fn result_panel(model: Model) {
@@ -331,7 +351,7 @@ fn result_panel(model: Model) {
               ),
             ],
             [
-              html.header([attribute.class("flex")], [
+              html.header([attribute.class("flex gap-4")], [
                 html.h1(
                   [
                     attribute.class(
