@@ -38,9 +38,13 @@ type QuizResult {
   QuizResult(results: List(Bool), answers: List(Int), score: Int, out_of: Int)
 }
 
+type Stats {
+  Stats(streak: Int)
+}
+
 type Msg {
   ShareResults
-  ReadAnswers(String)
+  ReadAnswers(String, Int)
   SubmitAnswers
   ToggleResultPanel
   SelectAnswer(String)
@@ -56,6 +60,7 @@ type Model {
     show_results: Bool,
     date: tempo.Date,
     launch_date: tempo.Date,
+    stats: Stats,
   )
 }
 
@@ -75,6 +80,7 @@ fn init(_flags) -> #(Model, effect.Effect(Msg)) {
       show_results: True,
       date: date.current_local(),
       launch_date: date.literal(launch_date),
+      stats: Stats(streak: 0),
     )
 
   #(
@@ -90,7 +96,7 @@ fn update(model: Model, msg: Msg) {
   case msg {
     ShareResults -> up_share_results(model)
     ToggleResultPanel -> toggle_result_panel(model)
-    ReadAnswers(answers) -> read_answers(model, answers)
+    ReadAnswers(answers, streak) -> read_answers(model, answers, streak)
     GotQuestions(Ok(file)) -> got_questions(model, file)
     GotQuestions(Error(_)) -> #(model, effect.none())
     SubmitAnswers -> submit_answers(model)
@@ -109,7 +115,7 @@ fn toggle_result_panel(model: Model) {
   #(Model(..model, show_results: !model.show_results), effect.none())
 }
 
-fn read_answers(model: Model, answers: String) {
+fn read_answers(model: Model, answers: String, streak: Int) {
   let result_decoder = {
     use answers <- decode.field("answers", decode.list(decode.int))
     use results <- decode.field("results", decode.list(decode.bool))
@@ -124,7 +130,15 @@ fn read_answers(model: Model, answers: String) {
         attempt.answers
         |> list.zip(model.questions)
         |> list.map(fn(x) { Question(..x.1, selected: Some(x.0)) })
-      #(Model(..model, questions: questions, submitted: True), effect.none())
+      #(
+        Model(
+          ..model,
+          questions: questions,
+          submitted: True,
+          stats: Stats(streak: streak),
+        ),
+        effect.none(),
+      )
     }
   }
 }
@@ -241,12 +255,21 @@ fn get_today(model: Model) {
   effect.from(fn(dispatch) {
     case get_localstorage(date_format(model.date)) {
       Ok(result) -> {
-        dispatch(ReadAnswers(result))
+        dispatch(ReadAnswers(result, calc_streak(model.date)))
         Nil
       }
       Error(_) -> Nil
     }
   })
+}
+
+fn calc_streak(date: tempo.Date) {
+  case get_localstorage(date_format(date)) {
+    Error(_) -> 0
+    Ok(result) -> {
+      1 + calc_streak(date.subtract(date, 1))
+    }
+  }
 }
 
 fn encode_result(result: QuizResult) -> json.Json {
@@ -380,6 +403,19 @@ fn result_panel(model: Model) {
               html.p([attribute.class("mb-6")], [
                 html.text(share_string(result.results)),
               ]),
+              html.div(
+                [
+                  attribute.class(
+                    "flex flex-col items-center border-t border-b my-6 py-2",
+                  ),
+                ],
+                [
+                  html.div([attribute.class("text-3xl")], [
+                    html.text(int.to_string(model.stats.streak)),
+                  ]),
+                  html.div([], [html.text("Streak")]),
+                ],
+              ),
               html.p([attribute.class("mb-6")], [
                 html.text("A new set of questions will appear at midnight"),
               ]),
