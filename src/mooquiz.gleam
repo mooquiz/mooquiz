@@ -18,7 +18,7 @@ import tempo/date
 
 const questions_dir_url = "https://raw.githubusercontent.com/mooquiz/Questions/refs/heads/main/"
 
-const launch_date = "2025-04-23"
+const launch_date = "2025-04-01"
 
 type Answer {
   Answer(pos: Int, text: String)
