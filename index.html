@@ -1,33 +1,62 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="A snappy music quiz. Ten new curated questions every day to challenge you and your friends!">
-    <link rel="canonical" href="https://popquizza.com" />
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta
+            name="description"
+            content="A daily pop quiz that tests your music knowledge and lets you share your results with friends and family. Can you reach the No 1 spot?"
+        />
+        <link rel="canonical" href="https://popquizza.com" />
 
+        <link
+            rel="preload"
+            href="/priv/static/fonts/anybody-v11-latin-800.woff2"
+            as="font"
+            type="font/woff2"
+            crossorigin="anonymous"
+        />
+        <link
+            rel="preload"
+            href="/priv/static/fonts/inter-v18-latin-500.woff2"
+            as="font"
+            type="font/woff2"
+            crossorigin="anonymous"
+        />
 
-    <link rel="preload" href="/priv/static/fonts/anybody-v11-latin-800.woff2" as="font" type="font/woff2" crossorigin="anonymous">
-    <link rel="preload" href="/priv/static/fonts/inter-v18-latin-500.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+        <title>POPQUIZZA - The daily music quiz to play and share!</title>
 
-    <title>POPQUIZZA - The daily music quiz to play and share!</title>
+        <link rel="stylesheet" href="/priv/static/fonts.css" />
+        <link rel="stylesheet" href="/priv/static/mooquiz.css?3" />
+        <script type="module" src="/priv/static/mooquiz.mjs?3"></script>
+    </head>
 
-    <link rel="stylesheet" href="/priv/static/fonts.css">
-    <link rel="stylesheet" href="/priv/static/mooquiz.css?3">
-    <script type="module" src="/priv/static/mooquiz.mjs?3"></script>
-  </head>
-
-  <body class="bg-background dark:bg-d-background font-sans antialiased text-normaltext dark:text-d-normaltext">
-    <div class="p-4 min-h-screen max-w-2xl mx-auto">
-      <div id="app"></div>
-      <address class="border-t border-dashed border-zinc-200 py-4 text-sm"> 
-	      Questions by Richard.
-	      Code by Kev (<a href="https://u27c.one" class="hover:text-head">⟁K</a>).
-	      <a href="https://gleam.run" class="hover:text-head">Gleam.</a>
-	      <a href="https://www.gnu.org/licenses/agpl-3.0.html" class="hover:text-head">AGPL.</a>
-	      No AI.
-	      <a href="https://github.com/mooquiz/mooquiz" class="hover:text-head">Source.</a>
-      </address>
-    </div>
-  </body>
+    <body
+        class="bg-background dark:bg-d-background font-sans antialiased text-normaltext dark:text-d-normaltext"
+    >
+        <div class="p-4 min-h-screen max-w-2xl mx-auto">
+            <div id="app"></div>
+            <address
+                class="border-t border-dashed border-zinc-200 py-4 text-sm"
+            >
+                Questions by Richard. Code by Kev (<a
+                    href="https://u27c.one"
+                    class="hover:text-head"
+                    >⟁K</a
+                >).
+                <a href="https://gleam.run" class="hover:text-head">Gleam.</a>
+                <a
+                    href="https://www.gnu.org/licenses/agpl-3.0.html"
+                    class="hover:text-head"
+                    >AGPL.</a
+                >
+                No AI.
+                <a
+                    href="https://github.com/mooquiz/mooquiz"
+                    class="hover:text-head"
+                    >Source.</a
+                >
+            </address>
+        </div>
+    </body>
 </html>
