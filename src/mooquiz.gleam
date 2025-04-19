@@ -361,7 +361,7 @@ fn result_panel(model: Model) {
                 html.text(share_string(result.results)),
               ]),
               html.p([attribute.class("mb-6")], [
-                html.text("A new set of questions will appear at midnight."),
+                html.text("A new set of questions will appear at midnight"),
               ]),
               html.div([], [
                 html.button(
