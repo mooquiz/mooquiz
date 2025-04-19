@@ -18,7 +18,7 @@ import tempo/date
 
 const questions_dir_url = "https://raw.githubusercontent.com/mooquiz/Questions/refs/heads/main/"
 
-const launch_date = "2025-04-19"
+const launch_date = "2025-04-23"
 
 type Answer {
   Answer(pos: Int, text: String)
@@ -39,12 +39,12 @@ type QuizResult {
 }
 
 type Stats {
-  Stats(streak: Int, count: Int)
+  Stats(streak: Int, count: Int, total: Int)
 }
 
 type Msg {
   ShareResults
-  ReadAnswers(String, Int, Int)
+  ReadAnswers(String, Int, Int, Int)
   SubmitAnswers
   ToggleResultPanel
   SelectAnswer(String)
@@ -80,7 +80,7 @@ fn init(_flags) -> #(Model, effect.Effect(Msg)) {
       show_results: True,
       date: date.current_local(),
       launch_date: date.literal(launch_date),
-      stats: Stats(streak: 0, count: 0),
+      stats: Stats(streak: 0, count: 0, total: 0),
     )
 
   #(
@@ -96,8 +96,8 @@ fn update(model: Model, msg: Msg) {
   case msg {
     ShareResults -> up_share_results(model)
     ToggleResultPanel -> toggle_result_panel(model)
-    ReadAnswers(answers, streak, count) ->
-      read_answers(model, answers, streak, count)
+    ReadAnswers(answers, streak, count, total) ->
+      read_answers(model, answers, streak, count, total)
     GotQuestions(Ok(file)) -> got_questions(model, file)
     GotQuestions(Error(_)) -> #(model, effect.none())
     SubmitAnswers -> submit_answers(model)
@@ -116,15 +116,22 @@ fn toggle_result_panel(model: Model) {
   #(Model(..model, show_results: !model.show_results), effect.none())
 }
 
-fn read_answers(model: Model, answers: String, streak: Int, count: Int) {
-  let result_decoder = {
-    use answers <- decode.field("answers", decode.list(decode.int))
-    use results <- decode.field("results", decode.list(decode.bool))
-    use score <- decode.field("score", decode.int)
-    use out_of <- decode.field("outOf", decode.int)
-    decode.success(QuizResult(results:, answers:, score:, out_of:))
-  }
-  case json.parse(answers, result_decoder) {
+fn result_decoder() {
+  use answers <- decode.field("answers", decode.list(decode.int))
+  use results <- decode.field("results", decode.list(decode.bool))
+  use score <- decode.field("score", decode.int)
+  use out_of <- decode.field("outOf", decode.int)
+  decode.success(QuizResult(results:, answers:, score:, out_of:))
+}
+
+fn read_answers(
+  model: Model,
+  answers: String,
+  streak: Int,
+  count: Int,
+  total: Int,
+) {
+  case json.parse(answers, result_decoder()) {
     Error(_) -> #(model, effect.none())
     Ok(attempt) -> {
       let questions =
@@ -136,7 +143,7 @@ fn read_answers(model: Model, answers: String, streak: Int, count: Int) {
           ..model,
           questions: questions,
           submitted: True,
-          stats: Stats(streak: streak, count: count),
+          stats: Stats(streak: streak, count: count, total: total),
         ),
         effect.none(),
       )
@@ -260,6 +267,7 @@ fn get_today(model: Model) {
           result,
           calc_streak(model.date),
           count_localstorage(),
+          calc_total(model.date, model.launch_date),
         ))
         Nil
       }
@@ -268,10 +276,27 @@ fn get_today(model: Model) {
   })
 }
 
+fn calc_total(date: tempo.Date, launch_date: tempo.Date) {
+  case date.is_earlier(date, launch_date) {
+    True -> 0
+    False -> {
+      case get_localstorage(date_format(date)) {
+        Ok(result) ->
+          case json.parse(result, result_decoder()) {
+            Error(_) -> 0
+            Ok(attempt) ->
+              attempt.score + calc_total(date.subtract(date, 1), launch_date)
+          }
+        Error(_) -> calc_total(date.subtract(date, 1), launch_date)
+      }
+    }
+  }
+}
+
 fn calc_streak(date: tempo.Date) {
   case get_localstorage(date_format(date)) {
     Error(_) -> 0
-    Ok(result) -> {
+    Ok(_) -> {
       1 + calc_streak(date.subtract(date, 1))
     }
   }
@@ -427,6 +452,7 @@ fn result_panel(model: Model) {
                 [
                   score_div("Count", model.stats.count),
                   score_div("Streak", model.stats.streak),
+                  score_div("Total", model.stats.total),
                 ],
               ),
               html.p([attribute.class("mb-6")], [
