@@ -564,7 +564,7 @@ fn view(model: Model) {
     html.div(
       [
         attribute.class(
-          "border rounded border-gray-300 dark:border-gray-700 bg-white dark:bg-d-b p-4 font-semibold my-4",
+          "dark:bg-gray-700 text-gray-300 border rounded border-gray-300 dark:border-gray-700 bg-white dark:bg-d-b p-4 font-semibold my-4",
         ),
       ],
       [
