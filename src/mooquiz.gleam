@@ -43,8 +43,9 @@ type Stats {
 }
 
 type Msg {
+  AppCalculatedStats(Stats)
   UserClickedShareResults
-  AppReadAnswers(String, Int, Int, Int)
+  AppReadAnswers(String)
   UserSubmittedAnswers
   UserToggledResultPanel
   UserSelectedAnswer(String)
@@ -94,15 +95,19 @@ fn init(_flags) -> #(Model, effect.Effect(Msg)) {
 
 fn update(model: Model, msg: Msg) {
   case msg {
+    AppCalculatedStats(stats) -> app_calculated_stats(model, stats)
     UserClickedShareResults -> user_clicked_share_results(model)
     UserToggledResultPanel -> user_toggled_result_panel(model)
-    AppReadAnswers(answers, streak, count, total) ->
-      app_read_answers(model, answers, streak, count, total)
+    AppReadAnswers(answers) -> app_read_answers(model, answers)
     AppReadQuestions(Ok(file)) -> app_read_questions(model, file)
     AppReadQuestions(Error(_)) -> #(model, effect.none())
     UserSubmittedAnswers -> user_submitted_answers(model)
     UserSelectedAnswer(value) -> user_selected_answer(model, value)
   }
+}
+
+fn app_calculated_stats(model: Model, stats: Stats) {
+  #(Model(..model, stats: stats), effect.none())
 }
 
 fn user_clicked_share_results(model: Model) {
@@ -124,13 +129,7 @@ fn result_decoder() {
   decode.success(QuizResult(results:, answers:, score:, out_of:))
 }
 
-fn app_read_answers(
-  model: Model,
-  answers: String,
-  streak: Int,
-  count: Int,
-  total: Int,
-) {
+fn app_read_answers(model: Model, answers: String) {
   case json.parse(answers, result_decoder()) {
     Error(_) -> #(model, effect.none())
     Ok(attempt) -> {
@@ -138,14 +137,10 @@ fn app_read_answers(
         attempt.answers
         |> list.zip(model.questions)
         |> list.map(fn(x) { Question(..x.1, selected: Some(x.0)) })
+
       #(
-        Model(
-          ..model,
-          questions: questions,
-          submitted: True,
-          stats: Stats(streak: streak, count: count, total: total),
-        ),
-        effect.none(),
+        Model(..model, questions: questions, submitted: True),
+        effect.from(fn(dispatch) { calculate_stats(model, dispatch) }),
       )
     }
   }
@@ -226,8 +221,18 @@ fn user_selected_answer(model: Model, value) {
   }
 }
 
+fn calculate_stats(model: Model, dispatch: fn(Msg) -> Nil) {
+  dispatch(
+    AppCalculatedStats(Stats(
+      streak: calc_streak(model.date),
+      count: count_localstorage(),
+      total: calc_total(model.date, model.launch_date),
+    )),
+  )
+}
+
 fn save_results(model: Model) {
-  effect.from(fn(_dispatch) {
+  effect.from(fn(dispatch) {
     set_localstorage(
       date_format(model.date),
       model.questions
@@ -235,6 +240,7 @@ fn save_results(model: Model) {
         |> encode_result()
         |> json.to_string,
     )
+    calculate_stats(model, dispatch)
   })
 }
 
@@ -263,12 +269,7 @@ fn get_today(model: Model) {
   effect.from(fn(dispatch) {
     case get_localstorage(date_format(model.date)) {
       Ok(result) -> {
-        dispatch(AppReadAnswers(
-          result,
-          calc_streak(model.date),
-          count_localstorage(),
-          calc_total(model.date, model.launch_date),
-        ))
+        dispatch(AppReadAnswers(result))
         Nil
       }
       Error(_) -> Nil
