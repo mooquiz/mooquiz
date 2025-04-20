@@ -43,12 +43,12 @@ type Stats {
 }
 
 type Msg {
-  ShareResults
-  ReadAnswers(String, Int, Int, Int)
-  SubmitAnswers
-  ToggleResultPanel
-  SelectAnswer(String)
-  GotQuestions(Result(String, rsvp.Error))
+  UserClickedShareResults
+  AppReadAnswers(String, Int, Int, Int)
+  UserSubmittedAnswers
+  UserToggledResultPanel
+  UserSelectedAnswer(String)
+  AppReadQuestions(Result(String, rsvp.Error))
 }
 
 type Model {
@@ -87,32 +87,32 @@ fn init(_flags) -> #(Model, effect.Effect(Msg)) {
     model,
     rsvp.get(
       questions_dir_url <> date_format(model.date) <> ".txt",
-      rsvp.expect_text(GotQuestions),
+      rsvp.expect_text(AppReadQuestions),
     ),
   )
 }
 
 fn update(model: Model, msg: Msg) {
   case msg {
-    ShareResults -> up_share_results(model)
-    ToggleResultPanel -> toggle_result_panel(model)
-    ReadAnswers(answers, streak, count, total) ->
-      read_answers(model, answers, streak, count, total)
-    GotQuestions(Ok(file)) -> got_questions(model, file)
-    GotQuestions(Error(_)) -> #(model, effect.none())
-    SubmitAnswers -> submit_answers(model)
-    SelectAnswer(value) -> select_answer(model, value)
+    UserClickedShareResults -> user_clicked_share_results(model)
+    UserToggledResultPanel -> user_toggled_result_panel(model)
+    AppReadAnswers(answers, streak, count, total) ->
+      app_read_answers(model, answers, streak, count, total)
+    AppReadQuestions(Ok(file)) -> app_read_questions(model, file)
+    AppReadQuestions(Error(_)) -> #(model, effect.none())
+    UserSubmittedAnswers -> user_submitted_answers(model)
+    UserSelectedAnswer(value) -> user_selected_answer(model, value)
   }
 }
 
-fn up_share_results(model: Model) {
+fn user_clicked_share_results(model: Model) {
   #(
     model,
     share_results(model.title, model.url, calculate_results(model.questions)),
   )
 }
 
-fn toggle_result_panel(model: Model) {
+fn user_toggled_result_panel(model: Model) {
   #(Model(..model, show_results: !model.show_results), effect.none())
 }
 
@@ -124,7 +124,7 @@ fn result_decoder() {
   decode.success(QuizResult(results:, answers:, score:, out_of:))
 }
 
-fn read_answers(
+fn app_read_answers(
   model: Model,
   answers: String,
   streak: Int,
@@ -151,7 +151,7 @@ fn read_answers(
   }
 }
 
-fn got_questions(model, file) {
+fn app_read_questions(model, file) {
   let assert [title, ..questions] = file |> string.trim |> string.split("\n\n")
   let questions =
     list.map(questions, fn(q) {
@@ -194,14 +194,14 @@ fn got_questions(model, file) {
   #(Model(..model, title: title, questions: questions), get_today(model))
 }
 
-fn submit_answers(model: Model) {
+fn user_submitted_answers(model: Model) {
   case unanswered_questions(model) {
     True -> #(model, effect.none())
     False -> #(Model(..model, submitted: True), save_results(model))
   }
 }
 
-fn select_answer(model: Model, value) {
+fn user_selected_answer(model: Model, value) {
   case string.split(value, "-") {
     [question_id, answer] -> {
       case int.parse(question_id) {
@@ -263,7 +263,7 @@ fn get_today(model: Model) {
   effect.from(fn(dispatch) {
     case get_localstorage(date_format(model.date)) {
       Ok(result) -> {
-        dispatch(ReadAnswers(
+        dispatch(AppReadAnswers(
           result,
           calc_streak(model.date),
           count_localstorage(),
@@ -352,7 +352,7 @@ fn button_css(active: Bool) {
 fn button(model: Model) {
   html.button(
     [
-      event.on_click(SubmitAnswers),
+      event.on_click(UserSubmittedAnswers),
       attribute.class(button_css(unanswered_questions(model))),
     ],
     [html.text("Submit")],
@@ -428,7 +428,7 @@ fn result_panel(model: Model) {
                 ),
                 html.a(
                   [
-                    event.on_click(ToggleResultPanel),
+                    event.on_click(UserToggledResultPanel),
                     attribute.class(
                       "duration-200 active:translate-y-0.5 active:scale-95 text-lg font-bold cursor-pointer",
                     ),
@@ -461,7 +461,7 @@ fn result_panel(model: Model) {
               html.div([], [
                 html.button(
                   [
-                    event.on_click(ShareResults),
+                    event.on_click(UserClickedShareResults),
                     attribute.class(button_css(False)),
                   ],
                   [html.text("Share")],
@@ -474,7 +474,10 @@ fn result_panel(model: Model) {
     }
     False -> {
       html.button(
-        [event.on_click(ToggleResultPanel), attribute.class(button_css(False))],
+        [
+          event.on_click(UserToggledResultPanel),
+          attribute.class(button_css(False)),
+        ],
         [html.text("Show Results")],
       )
     }
@@ -521,7 +524,7 @@ fn answer_radio(question: Question, answer: Answer, submitted: Bool) {
         attribute.value(
           int.to_string(question.id) <> "-" <> int.to_string(answer.pos),
         ),
-        event.on_input(SelectAnswer),
+        event.on_input(UserSelectedAnswer),
       ])
     }
   }
