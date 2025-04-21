@@ -86,7 +86,7 @@ fn init(_flags) -> #(Model, effect.Effect(Msg)) {
   #(
     model,
     rsvp.get(
-      "/questions/" <> date_format(model.date) <> ".txt",
+      "/priv/static/questions/" <> date_format(model.date) <> ".txt",
       rsvp.expect_text(AppReadQuestions),
     ),
   )
