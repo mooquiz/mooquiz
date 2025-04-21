@@ -17,9 +17,7 @@ import rsvp
 import tempo
 import tempo/date
 
-const questions_dir_url = "https://raw.githubusercontent.com/mooquiz/Questions/refs/heads/main/"
-
-const launch_date = "2025-04-01"
+const launch_date = "2025-04-23"
 
 type Answer {
   Answer(pos: Int, text: String)
@@ -88,7 +86,7 @@ fn init(_flags) -> #(Model, effect.Effect(Msg)) {
   #(
     model,
     rsvp.get(
-      questions_dir_url <> date_format(model.date) <> ".txt",
+      "/questions/" <> date_format(model.date) <> ".txt",
       rsvp.expect_text(AppReadQuestions),
     ),
   )
