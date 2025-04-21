@@ -577,6 +577,7 @@ fn view(model: Model) {
             "Round "
             <> model.launch_date
             |> date.difference(model.date)
+            |> int.add(1)
             |> number_to_words.number_to_words(),
           ),
         ],

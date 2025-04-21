@@ -1,13 +1,17 @@
 import gleam/int
-import gleam/list
-import gleam/option
 
 pub fn number_to_words(n: Int) -> String {
+  let sign = case n < 0 {
+    True -> "minus "
+    False -> ""
+  }
+
+  let n = int.absolute_value(n)
   let hundreds = n / 100
   let tens = n % 100 / 10
   let ones = n % 10
 
-  hundreds_to_words(hundreds, tens, ones)
+  sign <> hundreds_to_words(hundreds, tens, ones)
 }
 
 fn hundreds_to_words(hundreds: Int, tens: Int, ones: Int) -> String {
