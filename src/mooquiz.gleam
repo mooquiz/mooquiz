@@ -223,9 +223,9 @@ fn user_selected_answer(model: Model, value) {
 fn calculate_stats(model: Model, dispatch: fn(Msg) -> Nil) {
   dispatch(
     AppCalculatedStats(Stats(
-      streak: calc_streak(model.date),
-      count: count_localstorage(),
-      total: calc_total(model.date, model.launch_date),
+      streak: calc_streak(model.date, date.subtract(model.launch_date, 1)),
+      count: calc_count(model.date, date.subtract(model.launch_date, 1)),
+      total: calc_total(model.date, date.subtract(model.launch_date, 1)),
     )),
   )
 }
@@ -276,29 +276,49 @@ fn get_today(model: Model) {
   })
 }
 
-fn calc_total(date: tempo.Date, launch_date: tempo.Date) {
-  case date.is_earlier(date, launch_date) {
-    True -> 0
-    False -> {
+fn calc_total(date: tempo.Date, stop_at: tempo.Date) {
+  let fallback = date.subtract(stop_at, 5)
+  case date {
+    date if date == stop_at -> 0
+    date if date == fallback -> 0
+    date -> {
       case get_localstorage(date_format(date)) {
         Ok(result) ->
           case json.parse(result, result_decoder()) {
             Error(_) -> 0
             Ok(attempt) ->
-              attempt.score + calc_total(date.subtract(date, 1), launch_date)
+              attempt.score + calc_total(date.subtract(date, 1), stop_at)
           }
-        Error(_) -> calc_total(date.subtract(date, 1), launch_date)
+        Error(_) -> calc_total(date.subtract(date, 1), stop_at)
       }
     }
   }
 }
 
-fn calc_streak(date: tempo.Date) {
-  case get_localstorage(date_format(date)) {
-    Error(_) -> 0
-    Ok(_) -> {
-      1 + calc_streak(date.subtract(date, 1))
-    }
+fn calc_count(date: tempo.Date, stop_at: tempo.Date) {
+  let fallback = date.subtract(stop_at, 5)
+  case date {
+    date if date == stop_at -> 0
+    date if date == fallback -> 0
+    date ->
+      case get_localstorage(date_format(date)) {
+        Error(_) -> 0
+        Ok(_) -> 1
+      }
+      + calc_count(date.subtract(date, 1), stop_at)
+  }
+}
+
+fn calc_streak(date: tempo.Date, stop_at: tempo.Date) {
+  case date {
+    date if date == stop_at -> 0
+    date ->
+      case get_localstorage(date_format(date)) {
+        Error(_) -> 0
+        Ok(_) -> {
+          1 + calc_streak(date.subtract(date, 1), stop_at)
+        }
+      }
   }
 }
 
