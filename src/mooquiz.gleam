@@ -582,18 +582,23 @@ fn view(model: Model) {
           ),
         ],
       ),
-      html.div(
-        [
-          attribute.class(
-            "dark:bg-gray-700 text-gray-300 border rounded border-gray-300 dark:border-gray-700 bg-white dark:bg-d-b p-4 font-semibold my-4",
-          ),
-        ],
-        [
-          html.text(
-            "Official launch on Wednesday 23 April 2025! Pop back then for real questions! ",
-          ),
-        ],
-      ),
+      case date.is_earlier(model.date, model.launch_date) {
+        True -> {
+          html.div(
+            [
+              attribute.class(
+                "dark:bg-gray-700 text-gray-300 border rounded border-gray-300 dark:border-gray-700 bg-white dark:bg-d-b p-4 font-semibold my-4",
+              ),
+            ],
+            [
+              html.text(
+                "Official launch on Wednesday 23 April 2025! Pop back then for real questions! ",
+              ),
+            ],
+          )
+        }
+        False -> html.span([], [])
+      },
       html.div(
         [attribute.class("flex flex-col gap-6 mb-4")],
         list.map(model.questions, fn(q) {
