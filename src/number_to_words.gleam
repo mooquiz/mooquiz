@@ -11,7 +11,10 @@ pub fn number_to_words(n: Int) -> String {
   let tens = n % 100 / 10
   let ones = n % 10
 
-  sign <> hundreds_to_words(hundreds, tens, ones)
+  case n {
+    0 -> "zero"
+    _ -> sign <> hundreds_to_words(hundreds, tens, ones)
+  }
 }
 
 fn hundreds_to_words(hundreds: Int, tens: Int, ones: Int) -> String {
