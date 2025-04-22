@@ -569,16 +569,18 @@ fn view(model: Model) {
       html.h2(
         [
           attribute.class(
-            "text-sm font-bold mb-8 text-subhead dark:text-d-subhead",
+            "text-xl font-bold mb-8 text-subhead dark:text-d-subhead",
           ),
         ],
         [
           html.text(
-            "Round "
+            "Day "
             <> model.launch_date
             |> date.difference(model.date)
             |> int.add(1)
-            |> number_to_words.number_to_words(),
+            |> number_to_words.number_to_words()
+            <> ": "
+            <> date.format(model.date, tempo.CustomDate("DD-MM-YY")),
           ),
         ],
       ),
