@@ -253,13 +253,14 @@ fn share_results(title: String, url: String, result: QuizResult) {
           <> int.to_string(result.score)
           <> "/"
           <> int.to_string(result.out_of)
-          <> "  on "
+          <> " on "
           <> title
           <> "\n"
-          <> share_string(result.results),
+          <> share_string(result.results)
+          <> "\n"
+          <> url,
         ),
       ),
-      #("url", json.string(url)),
     ])
   effect.from(fn(_dispatch) { share_results_js(share_data) })
 }

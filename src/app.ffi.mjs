@@ -27,7 +27,7 @@ export async function share_results(shareData) {
   ) {
     navigator.share(shareData).catch(console.error);
   } else {
-    await navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`);
+    await navigator.clipboard.writeText(`${shareData.text}`);
     alert("Data copied to clipboard");
   }
 }
