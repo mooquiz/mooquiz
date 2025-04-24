@@ -471,13 +471,22 @@ fn result_panel(model: Model) {
               html.p([attribute.class("mb-6")], [
                 html.text("A new set of questions will appear at midnight"),
               ]),
-              html.div([], [
+              html.div([attribute.class("flex gap-4")], [
                 html.button(
                   [
                     event.on_click(UserClickedShareResults),
                     attribute.class(button_css(False)),
                   ],
                   [html.text("Share")],
+                ),
+                html.button(
+                  [
+                    event.on_click(UserToggledResultPanel),
+                    attribute.class(
+                      "px-4 py-2 rounded-lg font-semibold transition bg-subhead text-white hover:bg-cyan-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-head dark:hover:bg-cyan-600",
+                    ),
+                  ],
+                  [html.text("See answers")],
                 ),
               ]),
             ],
