@@ -55,13 +55,19 @@ type Model {
   Model(
     title: String,
     url: String,
-    submitted: Bool,
     questions: List(Question),
     show_results: Bool,
     date: tempo.Date,
     launch_date: tempo.Date,
     stats: Stats,
+    state: QuizState,
   )
+}
+
+type QuizState {
+  Loading
+  Loaded
+  Submitted
 }
 
 pub fn main() {
@@ -75,12 +81,12 @@ fn init(_flags) -> #(Model, effect.Effect(Msg)) {
     Model(
       title: "Loading",
       url: "popquizza.com",
-      submitted: False,
       questions: [],
       show_results: True,
       date: date.current_local(),
       launch_date: date.literal(launch_date),
       stats: Stats(streak: 0, count: 0, total: 0),
+      state: Loading,
     )
 
   #(
@@ -138,7 +144,7 @@ fn app_read_answers(model: Model, answers: String) {
         |> list.map(fn(x) { Question(..x.1, selected: Some(x.0)) })
 
       #(
-        Model(..model, questions: questions, submitted: True),
+        Model(..model, questions: questions, state: Submitted),
         effect.from(fn(dispatch) { calculate_stats(model, dispatch) }),
       )
     }
@@ -191,7 +197,7 @@ fn app_read_questions(model, file) {
 fn user_submitted_answers(model: Model) {
   case unanswered_questions(model) {
     True -> #(model, effect.none())
-    False -> #(Model(..model, submitted: True), save_results(model))
+    False -> #(Model(..model, state: Submitted), save_results(model))
   }
 }
 
@@ -516,15 +522,15 @@ fn share_string(results: List(Bool)) {
   |> string.join("")
 }
 
-fn answer_radio(question: Question, answer: Answer, submitted: Bool) {
+fn answer_radio(question: Question, answer: Answer, state: QuizState) {
   case
-    submitted,
+    state,
     question.selected == Some(answer.pos),
     question.correct == answer.pos
   {
-    True, _, True -> html.text("✔️")
-    True, True, False -> html.text("❌")
-    True, _, _ -> html.text("")
+    Submitted, _, True -> html.text("✔️")
+    Submitted, True, False -> html.text("❌")
+    Submitted, _, _ -> html.text("")
     _, _, _ -> {
       html.input([
         attribute.type_("radio"),
@@ -538,22 +544,22 @@ fn answer_radio(question: Question, answer: Answer, submitted: Bool) {
   }
 }
 
-fn answer_div(answer: Answer, question: Question, submitted: Bool) {
+fn answer_div(answer: Answer, question: Question, state: QuizState) {
   let bg = case
-    submitted,
+    state,
     question.selected == Some(answer.pos),
     question.correct == answer.pos
   {
-    False, True, _ -> "bg-selected dark:bg-d-selected"
-    True, True, True -> "bg-correct dark:bg-d-correct font-bold"
-    True, True, False -> "bg-incorrect dark:bg-d-incorrect font-bold"
+    _, True, _ -> "bg-selected dark:bg-d-selected"
+    Submitted, True, True -> "bg-correct dark:bg-d-correct font-bold"
+    Submitted, True, False -> "bg-incorrect dark:bg-d-incorrect font-bold"
     _, _, _ ->
       "bg-question dark:bg-d-question hover:bg-question-hover dark:hover:bg-d-question-hover cursor-pointer"
   }
 
   html.label([attribute.class("block w-full flex duration-200 p-2 " <> bg)], [
     html.span([attribute.class("grow")], [html.text(answer.text)]),
-    answer_radio(question, answer, submitted),
+    answer_radio(question, answer, state),
   ])
 }
 
@@ -619,15 +625,15 @@ fn view(model: Model) {
             html.div(
               [attribute.class("flex flex-col gap-2")],
               list.map(q.answers, fn(answer) {
-                answer_div(answer, q, model.submitted)
+                answer_div(answer, q, model.state)
               }),
             ),
           ])
         }),
       ),
-      case model.submitted {
-        True -> result_panel(model)
-        False -> button(model)
+      case model.state {
+        Submitted -> result_panel(model)
+        _ -> button(model)
       },
     ]),
   ])
