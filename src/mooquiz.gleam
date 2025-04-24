@@ -56,7 +56,6 @@ type Model {
     title: String,
     url: String,
     questions: List(Question),
-    show_results: Bool,
     date: tempo.Date,
     launch_date: tempo.Date,
     stats: Stats,
@@ -68,6 +67,7 @@ type QuizState {
   Loading
   Loaded
   Submitted
+  ShowAnswers
 }
 
 pub fn main() {
@@ -82,7 +82,6 @@ fn init(_flags) -> #(Model, effect.Effect(Msg)) {
       title: "Loading",
       url: "popquizza.com",
       questions: [],
-      show_results: True,
       date: date.current_local(),
       launch_date: date.literal(launch_date),
       stats: Stats(streak: 0, count: 0, total: 0),
@@ -123,7 +122,14 @@ fn user_clicked_share_results(model: Model) {
 }
 
 fn user_toggled_result_panel(model: Model) {
-  #(Model(..model, show_results: !model.show_results), effect.none())
+  #(
+    Model(..model, state: case model.state {
+      ShowAnswers -> Submitted
+      Submitted -> ShowAnswers
+      x -> x
+    }),
+    effect.none(),
+  )
 }
 
 fn result_decoder() {
@@ -191,7 +197,10 @@ fn app_read_questions(model, file) {
       )
     })
 
-  #(Model(..model, title: title, questions: questions), get_today(model))
+  #(
+    Model(..model, title: title, questions: questions, state: Loaded),
+    get_today(model),
+  )
 }
 
 fn user_submitted_answers(model: Model) {
@@ -405,8 +414,17 @@ fn score_div(title: String, number: Int) {
 }
 
 fn result_panel(model: Model) {
-  case model.show_results {
-    True -> {
+  case model.state {
+    Loaded -> {
+      html.button(
+        [
+          event.on_click(UserToggledResultPanel),
+          attribute.class(button_css(False)),
+        ],
+        [html.text("Show Results")],
+      )
+    }
+    _ -> {
       let result = calculate_results(model.questions)
       html.div(
         [
@@ -486,15 +504,6 @@ fn result_panel(model: Model) {
         ],
       )
     }
-    False -> {
-      html.button(
-        [
-          event.on_click(UserToggledResultPanel),
-          attribute.class(button_css(False)),
-        ],
-        [html.text("Show Results")],
-      )
-    }
   }
 }
 
@@ -528,10 +537,7 @@ fn answer_radio(question: Question, answer: Answer, state: QuizState) {
     question.selected == Some(answer.pos),
     question.correct == answer.pos
   {
-    Submitted, _, True -> html.text("✔️")
-    Submitted, True, False -> html.text("❌")
-    Submitted, _, _ -> html.text("")
-    _, _, _ -> {
+    Loaded, _, _ -> {
       html.input([
         attribute.type_("radio"),
         attribute.name("question-" <> int.to_string(question.id)),
@@ -541,6 +547,9 @@ fn answer_radio(question: Question, answer: Answer, state: QuizState) {
         event.on_input(UserSelectedAnswer),
       ])
     }
+    _, _, True -> html.text("✔️")
+    _, True, False -> html.text("❌")
+    _, _, _ -> html.text("")
   }
 }
 
@@ -550,11 +559,12 @@ fn answer_div(answer: Answer, question: Question, state: QuizState) {
     question.selected == Some(answer.pos),
     question.correct == answer.pos
   {
-    _, True, _ -> "bg-selected dark:bg-d-selected"
-    Submitted, True, True -> "bg-correct dark:bg-d-correct font-bold"
-    Submitted, True, False -> "bg-incorrect dark:bg-d-incorrect font-bold"
-    _, _, _ ->
+    Loaded, True, _ -> "bg-selected dark:bg-d-selected"
+    _, True, True -> "bg-correct dark:bg-d-correct font-bold"
+    _, True, False -> "bg-incorrect dark:bg-d-incorrect font-bold"
+    Loaded, _, _ ->
       "bg-question dark:bg-d-question hover:bg-question-hover dark:hover:bg-d-question-hover cursor-pointer"
+    _, _, _ -> "bg-question dark:bg-d-question"
   }
 
   html.label([attribute.class("block w-full flex duration-200 p-2 " <> bg)], [
