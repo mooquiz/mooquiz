@@ -278,10 +278,8 @@ fn get_today(model: Model) {
 }
 
 fn calc_total(date: tempo.Date, stop_at: tempo.Date) {
-  let fallback = date.subtract(stop_at, 5)
   case date {
     date if date == stop_at -> 0
-    date if date == fallback -> 0
     date -> {
       case get_localstorage(date_format(date)) {
         Ok(result) ->
@@ -297,10 +295,8 @@ fn calc_total(date: tempo.Date, stop_at: tempo.Date) {
 }
 
 fn calc_count(date: tempo.Date, stop_at: tempo.Date) {
-  let fallback = date.subtract(stop_at, 5)
   case date {
     date if date == stop_at -> 0
-    date if date == fallback -> 0
     date ->
       case get_localstorage(date_format(date)) {
         Error(_) -> 0
@@ -345,11 +341,6 @@ fn set_localstorage(_key: String, _value: String) -> Nil {
 @external(javascript, "./app.ffi.mjs", "get_localstorage")
 fn get_localstorage(_key: String) -> Result(String, Nil) {
   Error(Nil)
-}
-
-@external(javascript, "./app.ffi.mjs", "count_localstorage")
-fn count_localstorage() -> Int {
-  0
 }
 
 fn date_format(date: tempo.Date) {
