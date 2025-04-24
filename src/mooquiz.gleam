@@ -373,34 +373,20 @@ fn button(model: Model) {
 }
 
 fn results_title(score: Int) {
-  let welldone =
-    case score {
-      0 | 1 | 2 -> [
-        "Bit of a flop!", "The industry is brutal!", "Bottom of the pops!",
-        "Tomorrow's another day!", "Don't give up the day job!",
-      ]
-      3 | 4 | 5 -> [
-        "Bubbling under!", "Must try harder!", "Keep trying!",
-        "Keep on keeping on!", "Slow start, but there's something there!",
-      ]
-      6 | 7 | 8 -> [
-        "Highest new entry!", "Bright new talent!", "Rising star!",
-        "Bring it on!", "Climbing the chart!",
-      ]
-      9 -> [
-        "Threatening the top spot!", "Almost there!", "Look out for this one!",
-        "Flying high!", "Enjoying the high life!",
-      ]
-      10 -> [
-        "Top of the chart!", "Chartbuster!", "No 1 Smash Hit!",
-        "Now that's what I call a hit!", "You've made it big!",
-      ]
-      _ -> ["WELL DONE"]
-    }
-    |> list.sample(1)
-
-  let assert [welldone] = welldone
-  welldone
+  case score {
+    0 -> "Bottom of the pops!"
+    1 -> "Tomorrow's another day!"
+    2 -> "Must Try Harder!"
+    3 -> "Keep on keeping on!"
+    4 -> "Bubbling under!"
+    5 -> "Highest new entry!"
+    6 -> "Rising star!"
+    7 -> "Climbing the chart!"
+    8 -> "Flying high!"
+    9 -> "Almost there!"
+    10 -> "No 1 Smash Hit!"
+    _ -> "Well done!"
+  }
 }
 
 fn score_div(title: String, number: Int) {
