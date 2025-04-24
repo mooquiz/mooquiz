@@ -258,7 +258,8 @@ fn share_results(title: String, url: String, result: QuizResult) {
           <> "\n"
           <> share_string(result.results)
           <> "\n"
-          <> url,
+          <> url
+          <> " #popquizza",
         ),
       ),
     ])
