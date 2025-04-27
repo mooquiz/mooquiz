@@ -483,7 +483,7 @@ fn result_panel(model: Model) {
                     event.on_click(UserClickedShareResults),
                     attribute.class(button_css(False)),
                   ],
-                  [html.text("Share")],
+                  [html.text("Share Results")],
                 ),
                 html.button(
                   [
