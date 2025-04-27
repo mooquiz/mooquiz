@@ -49,6 +49,7 @@ type Msg {
   UserToggledResultPanel
   UserSelectedAnswer(String)
   AppReadQuestions(Result(String, rsvp.Error))
+  UserClickedShowResults
 }
 
 type Model {
@@ -107,7 +108,12 @@ fn update(model: Model, msg: Msg) {
     AppReadQuestions(Error(_)) -> #(model, effect.none())
     UserSubmittedAnswers -> user_submitted_answers(model)
     UserSelectedAnswer(value) -> user_selected_answer(model, value)
+    UserClickedShowResults -> user_clicked_show_results(model)
   }
+}
+
+fn user_clicked_show_results(model: Model) {
+  #(Model(..model, state: Submitted), effect.none())
 }
 
 fn app_calculated_stats(model: Model, stats: Stats) {
@@ -377,16 +383,6 @@ fn button_css(active: Bool) {
   }
 }
 
-fn button(model: Model) {
-  html.button(
-    [
-      event.on_click(UserSubmittedAnswers),
-      attribute.class(button_css(unanswered_questions(model))),
-    ],
-    [html.text("Submit")],
-  )
-}
-
 fn results_title(score: Int) {
   case score {
     0 -> "Bottom of the pops!"
@@ -643,7 +639,24 @@ fn view(model: Model) {
       ),
       case model.state {
         Submitted -> result_panel(model)
-        _ -> button(model)
+        ShowAnswers -> {
+          html.button(
+            [
+              event.on_click(UserClickedShowResults),
+              attribute.class(button_css(unanswered_questions(model))),
+            ],
+            [html.text("Show Results")],
+          )
+        }
+        _ -> {
+          html.button(
+            [
+              event.on_click(UserSubmittedAnswers),
+              attribute.class(button_css(unanswered_questions(model))),
+            ],
+            [html.text("Submit")],
+          )
+        }
       },
     ]),
   ])
