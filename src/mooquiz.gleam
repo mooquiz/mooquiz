@@ -167,7 +167,10 @@ fn app_read_questions(model, file) {
   let assert [title, ..questions] = file |> string.trim |> string.split("\n\n")
   let questions =
     list.map(questions, fn(q) {
-      let assert [question_text, correct, ..answers] = string.split(q, "\n")
+      let assert [question_text, correct, ..answers] =
+        q
+        |> string.split("\n")
+        |> list.map(fn(x) { string.trim(x) })
 
       let answers =
         answers
