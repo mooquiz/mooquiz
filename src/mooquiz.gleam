@@ -495,7 +495,7 @@ fn result_panel(model: Model) {
                       "px-4 py-2 rounded-lg font-semibold transition bg-subhead text-white hover:bg-cyan-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-head dark:hover:bg-cyan-600",
                     ),
                   ],
-                  [html.text("See answers")],
+                  [html.text("See Answers")],
                 ),
               ]),
             ],
