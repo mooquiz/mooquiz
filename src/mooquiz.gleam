@@ -11,6 +11,7 @@ import lustre
 import lustre/attribute
 import lustre/effect
 import lustre/element/html
+import lustre/element/svg
 import lustre/event
 import number_to_words
 import rsvp
@@ -474,11 +475,25 @@ fn result_panel(model: Model) {
                 [
                   score_div("Count", model.stats.count),
                   score_div("Streak", model.stats.streak),
+                  score_div("Average", model.stats.total / model.stats.count),
                   score_div("Total", model.stats.total),
                 ],
               ),
               html.p([attribute.class("mb-6")], [
                 html.text("A new set of questions will appear at midnight"),
+              ]),
+              html.p([attribute.class("mb-6")], [
+                html.a(
+                  [
+                    attribute.class(
+                      "hover:underline hover:text-blue-700 text-blue-500",
+                    ),
+                    attribute.href(
+                      "https://www.facebook.com/profile.php?id=61575507458149",
+                    ),
+                  ],
+                  [html.text("Join us on our Facebook page!")],
+                ),
               ]),
               html.div([attribute.class("flex gap-4")], [
                 html.button(
