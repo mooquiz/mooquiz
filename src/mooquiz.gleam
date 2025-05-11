@@ -411,7 +411,10 @@ fn score_div(title: String, number: Int) {
 fn score_div_float(title: String, number: Float, precision: Int) {
   html.div([attribute.class("grow")], [
     html.div([attribute.class("text-3xl text-center")], [
-      html.text(number |> float.to_precision(precision) |> float.to_string),
+      html.text(case precision {
+        0 -> number |> float.truncate |> int.to_string
+        _ -> number |> float.to_precision(precision) |> float.to_string
+      }),
     ]),
     html.div([attribute.class("text-center")], [html.text(title)]),
   ])
