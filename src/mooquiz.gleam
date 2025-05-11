@@ -2,6 +2,7 @@
 // Copyright (C) 2025 ⟁K <k@u27c.one>
 
 import gleam/dynamic/decode
+import gleam/float
 import gleam/int
 import gleam/json
 import gleam/list
@@ -11,7 +12,6 @@ import lustre
 import lustre/attribute
 import lustre/effect
 import lustre/element/html
-import lustre/element/svg
 import lustre/event
 import number_to_words
 import rsvp
@@ -405,9 +405,13 @@ fn results_title(score: Int) {
 }
 
 fn score_div(title: String, number: Int) {
+  score_div_float(title, int.to_float(number), 0)
+}
+
+fn score_div_float(title: String, number: Float, precision: Int) {
   html.div([attribute.class("grow")], [
     html.div([attribute.class("text-3xl text-center")], [
-      html.text(int.to_string(number)),
+      html.text(number |> float.to_precision(precision) |> float.to_string),
     ]),
     html.div([attribute.class("text-center")], [html.text(title)]),
   ])
@@ -475,7 +479,12 @@ fn result_panel(model: Model) {
                 [
                   score_div("Count", model.stats.count),
                   score_div("Streak", model.stats.streak),
-                  score_div("Average", model.stats.total / model.stats.count),
+                  score_div_float(
+                    "Average",
+                    int.to_float(model.stats.total)
+                      /. int.to_float(model.stats.count),
+                    2,
+                  ),
                   score_div("Total", model.stats.total),
                 ],
               ),
