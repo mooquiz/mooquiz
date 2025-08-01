@@ -156,10 +156,15 @@ fn app_read_answers(model: Model, answers: String) {
         |> list.zip(model.questions)
         |> list.map(fn(x) { Question(..x.1, selected: Some(x.0)) })
 
-      #(
-        Model(..model, questions: questions, state: Submitted),
-        effect.from(fn(dispatch) { calculate_stats(model, dispatch) }),
-      )
+      case attempt.out_of {
+        0 -> #(model, effect.none())
+        _ -> {
+          #(
+            Model(..model, questions: questions, state: Submitted),
+            effect.from(fn(dispatch) { calculate_stats(model, dispatch) }),
+          )
+        }
+      }
     }
   }
 }
